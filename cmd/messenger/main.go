@@ -1,41 +1,45 @@
 package main
 
 import (
-	"fmt"
 	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 
+	"github.com/RockX-SG/frost-dkg-demo/internal/handlers"
 	"github.com/RockX-SG/frost-dkg-demo/internal/messenger"
+	"github.com/RockX-SG/frost-dkg-demo/internal/workers"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	m := messenger.Messenger{
+	m := &messenger.Messenger{
 		Topics: map[string]*messenger.Topic{
-			"default": {
-				Name: "default",
+			messenger.DefaultTopic: {
+				Name: messenger.DefaultTopic,
 				Subscribers: map[string]*messenger.Subscriber{
-					"sub1": {
-						Name:         "sub1",
+					"operator-1": {
+						Name:         "operator-1",
+						SrvAddr:      "http://0.0.0.0:8081",
 						SubscribesTo: make(map[string]*messenger.Topic),
 						Outgoing:     make(chan *messenger.Message),
 						ChMutex:      &sync.Mutex{},
 					},
-					"sub2": {
-						Name:         "sub2",
+					"operator-2": {
+						Name:         "operator-2",
+						SrvAddr:      "http://0.0.0.0:8082",
 						SubscribesTo: make(map[string]*messenger.Topic),
 						Outgoing:     make(chan *messenger.Message),
 						ChMutex:      &sync.Mutex{},
 					},
-					"sub3": {
-						Name:         "sub3",
+					"operator-3": {
+						Name:         "operator-3",
+						SrvAddr:      "http://0.0.0.0:8083",
 						SubscribesTo: make(map[string]*messenger.Topic),
 						Outgoing:     make(chan *messenger.Message),
 						ChMutex:      &sync.Mutex{},
 					},
-					"sub4": {
-						Name:         "sub4",
+					"operator-4": {
+						Name:         "operator-4",
+						SrvAddr:      "http://0.0.0.0:8084",
 						SubscribesTo: make(map[string]*messenger.Topic),
 						Outgoing:     make(chan *messenger.Message),
 						ChMutex:      &sync.Mutex{},
@@ -45,23 +49,26 @@ func main() {
 		},
 		Incoming: make(chan *messenger.Message),
 		ChMutex:  &sync.Mutex{},
+		Data:     make(map[string]*messenger.DataStore),
 	}
 
-	go m.ProcessIncomingMessageWorker(1)
+	go workers.ProcessIncomingMessageWorker(1, m)
 
-	for _, sub := range m.Topics["default"].Subscribers {
-		sub.SubscribesTo["default"] = m.Topics["default"]
-		go sub.ProcessOutgoingMessageWorker(1)
+	for _, sub := range m.Topics[messenger.DefaultTopic].Subscribers {
+		sub.SubscribesTo[messenger.DefaultTopic] = m.Topics[messenger.DefaultTopic]
+		go workers.ProcessOutgoingMessageWorker(1, sub)
 	}
 
-	m.Publish("default", []byte("hello world 1"))
-	m.Publish("default", []byte("hello world 2"))
-	m.Publish("default", []byte("hello world 3"))
-	m.Publish("default", []byte("hello world 4"))
-	m.Publish("default", []byte("hello world 5"))
+	r := gin.Default()
+	r.GET("/ping", handlers.HandlePing)
+	r.POST("/publish", messenger.HandlePublish(m))
+	r.POST("/stream/dkgoutput", messenger.HandleStreamDKGOutput(m))
+	r.POST("/stream/dkgblame", messenger.HandleStreamDKGBlame(m))
+	r.GET("/data/:request_id", messenger.HandleGetData(m))
 
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	<-ch
-	fmt.Println("Received signal, shutting down...")
+	HttpAddr := os.Getenv("MESSENGER_ADDR")
+	if HttpAddr == "" {
+		HttpAddr = "0.0.0.0:3000"
+	}
+	panic(r.Run(HttpAddr))
 }
