@@ -1,4 +1,4 @@
-package handlers
+package node
 
 import (
 	"io/ioutil"
@@ -9,12 +9,6 @@ import (
 	"github.com/bloxapp/ssv-spec/types"
 	"github.com/gin-gonic/gin"
 )
-
-func HandlePing(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"message": "pong",
-	})
-}
 
 func HandleConsume(node *dkg.Node) func(*gin.Context) {
 	return func(c *gin.Context) {

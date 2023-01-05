@@ -55,6 +55,32 @@ func (cl *Client) BroadcastDKGMessage(msg *dkg.SignedMessage) error {
 	return cl.publish(DefaultTopic, data)
 }
 
+func (cl *Client) RegisterOperatorNode(id, addr string) error {
+	sub := &Subscriber{
+		Name:    id,
+		SrvAddr: addr,
+	}
+	byts, _ := json.Marshal(sub)
+
+	url := fmt.Sprintf("%s/register_node?subscribes_to=%s", cl.SrvAddr, DefaultTopic)
+	req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(byts))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to register operator node (id %s) with the messenger", id)
+	}
+	return nil
+}
+
 func (cl *Client) publish(topicName string, data []byte) error {
 	msg := types.SSVMessage{
 		MsgType: types.DKGMsgType,

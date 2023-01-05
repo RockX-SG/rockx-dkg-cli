@@ -22,12 +22,11 @@ type Topic struct {
 }
 
 type Subscriber struct {
-	Name         string
-	SrvAddr      string
-	SubscribesTo map[string]*Topic
-
-	Outgoing  chan *Message
-	RetryData map[string]int
+	Name         string            `json:"name"`
+	SrvAddr      string            `json:"srv_addr"`
+	SubscribesTo map[string]*Topic `json:"-"`
+	Outgoing     chan *Message     `json:"-"`
+	RetryData    map[string]int    `json:"-"`
 }
 
 type Message struct {

@@ -11,6 +11,57 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func HandleNodeRegistration(m *Messenger) func(*gin.Context) {
+	return func(c *gin.Context) {
+		subscribesTo := c.Query("subscribes_to")
+		_, exist := m.Topics[subscribesTo]
+		if !exist {
+			var err error = &ErrTopicNotFound{
+				TopicName: subscribesTo,
+			}
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "topic for subscription doesn't exist",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		subscriber := &Subscriber{}
+		if err := c.ShouldBindJSON(subscriber); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "failed to parse subscriber data from the request body",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		subscriber.SubscribesTo = map[string]*Topic{}
+		subscriber.Outgoing = make(chan *Message, 5)
+		subscriber.RetryData = make(map[string]int)
+
+		if subscriber.Name == "" || subscriber.SrvAddr == "" {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "invalid subscriber data: empty name or addr",
+				"error":   fmt.Errorf("Error: empty name %s or addr %s", subscriber.Name, subscriber.SrvAddr),
+			})
+			return
+		}
+
+		sub, ok := m.Topics[subscribesTo].Subscribers[subscriber.Name]
+		if ok {
+			sub.SrvAddr = subscriber.SrvAddr
+			m.Topics[subscribesTo].Subscribers[subscriber.Name] = sub
+		} else {
+			subscriber.Outgoing = make(chan *Message, 5)
+			subscriber.RetryData = make(map[string]int)
+			subscriber.SubscribesTo[subscribesTo] = m.Topics[subscribesTo]
+			m.Topics[subscribesTo].Subscribers[subscriber.Name] = subscriber
+		}
+
+		c.JSON(http.StatusOK, nil)
+	}
+}
+
 func HandlePublish(m *Messenger) func(*gin.Context) {
 	return func(c *gin.Context) {
 		topicName := c.Query("topic_name")

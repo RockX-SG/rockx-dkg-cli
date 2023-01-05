@@ -56,46 +56,48 @@ func ProcessIncomingMessageWorker(id int, m *messenger.Messenger) {
 	}
 }
 
-func ProcessOutgoingMessageWorker(s *messenger.Subscriber) {
-	for msg := range s.Outgoing {
+func ProcessOutgoingMessageWorker(m *messenger.Messenger) {
+	for _, s := range m.Topics[messenger.DefaultTopic].Subscribers {
+		for msg := range s.Outgoing {
 
-		h := sha256.Sum256(msg.Data)
-		k := base64.RawStdEncoding.EncodeToString(h[:])
+			h := sha256.Sum256(msg.Data)
+			k := base64.RawStdEncoding.EncodeToString(h[:])
 
-		numRetries, ok := s.RetryData[k]
-		if ok {
-			if numRetries >= maxRetriesAllowed {
-				continue
+			numRetries, ok := s.RetryData[k]
+			if ok {
+				if numRetries >= maxRetriesAllowed {
+					continue
+				} else {
+					s.RetryData[k]++
+				}
 			} else {
-				s.RetryData[k]++
+				s.RetryData[k] = 0
 			}
-		} else {
-			s.RetryData[k] = 0
-		}
 
-		if numRetries > 0 {
-			time.Sleep(time.Duration(numRetries) * (time.Second))
-		}
+			if numRetries > 0 {
+				time.Sleep(time.Duration(numRetries) * (time.Second))
+			}
 
-		_, exist := s.SubscribesTo[msg.Topic]
-		if !exist {
-			var err = &messenger.ErrTopicNotFound{TopicName: msg.Topic}
-			log.Printf("Error: %s\n", err.Error())
-			continue
-		}
+			_, exist := s.SubscribesTo[msg.Topic]
+			if !exist {
+				var err = &messenger.ErrTopicNotFound{TopicName: msg.Topic}
+				log.Printf("Error: %s\n", err.Error())
+				continue
+			}
 
-		resp, err := http.Post(fmt.Sprintf("%s/consume", s.SrvAddr), "application/json", bytes.NewReader(msg.Data))
-		if err != nil {
-			log.Printf("Error: %s\n", err.Error())
-			continue
-		}
+			resp, err := http.Post(fmt.Sprintf("%s/consume", s.SrvAddr), "application/json", bytes.NewReader(msg.Data))
+			if err != nil {
+				log.Printf("Error: %s\n", err.Error())
+				continue
+			}
 
-		respbody, _ := ioutil.ReadAll(resp.Body)
-		if resp.StatusCode != http.StatusOK {
-			s.Outgoing <- msg
-			var err = fmt.Errorf("failed to publish message to the subscriber %s %v", s.Name, string(respbody))
-			log.Printf("Error: %s\n", err.Error())
+			respbody, _ := ioutil.ReadAll(resp.Body)
+			if resp.StatusCode != http.StatusOK {
+				s.Outgoing <- msg
+				var err = fmt.Errorf("failed to publish message to the subscriber %s %v", s.Name, string(respbody))
+				log.Printf("Error: %s\n", err.Error())
+			}
+			resp.Body.Close()
 		}
-		resp.Body.Close()
 	}
 }

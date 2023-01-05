@@ -1,0 +1,55 @@
+version: "3.7"
+services: 
+  messenger:
+    build:
+      context: ./
+      dockerfile: build/docker/messenger/Dockerfile
+    command: ./messenger
+    env_file: env/messenger.env
+    restart: on-failure
+    ports: 
+      - 3000:3000
+  operator-1:
+    build:
+      context: ./
+      dockerfile: build/docker/node/Dockerfile
+    command: ./node
+    depends_on:
+      - "messenger"
+    env_file: env/operator.1.env
+    restart: on-failure
+    ports: 
+      - 8081:8081
+  operator-2:
+    build:
+      context: ./
+      dockerfile: build/docker/node/Dockerfile
+    command: ./node
+    depends_on:
+      - "messenger"
+    env_file: env/operator.2.env
+    restart: on-failure
+    ports: 
+      - 8082:8082
+  operator-3:
+    build:
+      context: ./
+      dockerfile: build/docker/node/Dockerfile
+    command: ./node
+    depends_on:
+      - "messenger"
+    env_file: env/operator.3.env
+    restart: on-failure
+    ports: 
+      - 8083:8083
+  operator-4:
+    build:
+      context: ./
+      dockerfile: build/docker/node/Dockerfile
+    command: ./node
+    depends_on:
+      - "messenger"
+    env_file: env/operator.4.env
+    restart: on-failure
+    ports: 
+      - 8084:8084
