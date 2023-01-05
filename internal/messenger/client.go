@@ -28,8 +28,9 @@ func (cl *Client) StreamDKGBlame(blame *dkg.BlameOutput) error {
 		return err
 	}
 
-	return cl.stream("dkgoutput", requestID, data)
+	return cl.stream("dkgblame", requestID, data)
 }
+
 func (cl *Client) StreamDKGOutput(output map[types.OperatorID]*dkg.SignedOutput) error {
 	var requestID string
 
@@ -42,8 +43,9 @@ func (cl *Client) StreamDKGOutput(output map[types.OperatorID]*dkg.SignedOutput)
 	if err != nil {
 		return err
 	}
-	return cl.stream("dkgblame", requestID, data)
+	return cl.stream("dkgoutput", requestID, data)
 }
+
 func (cl *Client) BroadcastDKGMessage(msg *dkg.SignedMessage) error {
 	data, err := msg.Encode()
 	if err != nil {

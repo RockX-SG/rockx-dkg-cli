@@ -1,8 +1,6 @@
 package messenger
 
 import (
-	"sync"
-
 	"github.com/bloxapp/ssv-spec/dkg"
 	"github.com/bloxapp/ssv-spec/types"
 )
@@ -15,7 +13,6 @@ type Messenger struct {
 	Topics map[string]*Topic
 	Data   map[string]*DataStore
 
-	ChMutex  *sync.Mutex
 	Incoming chan *Message
 }
 
@@ -29,8 +26,8 @@ type Subscriber struct {
 	SrvAddr      string
 	SubscribesTo map[string]*Topic
 
-	ChMutex  *sync.Mutex
-	Outgoing chan *Message
+	Outgoing  chan *Message
+	RetryData map[string]int
 }
 
 type Message struct {
@@ -48,9 +45,6 @@ func (m *Messenger) Publish(topicName string, data []byte) error {
 	if !exist {
 		return &ErrTopicNotFound{TopicName: topicName}
 	}
-
-	m.ChMutex.Lock()
-	defer m.ChMutex.Unlock()
 
 	m.Incoming <- &Message{Topic: tp.Name, Data: data}
 	return nil

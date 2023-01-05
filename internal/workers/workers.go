@@ -2,13 +2,23 @@ package workers
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/RockX-SG/frost-dkg-demo/internal/messenger"
 	"github.com/bloxapp/ssv-spec/dkg"
+	"github.com/bloxapp/ssv-spec/dkg/frost"
 	"github.com/bloxapp/ssv-spec/types"
+)
+
+var (
+	maxRetriesAllowed = 10
 )
 
 func ProcessIncomingMessageWorker(id int, m *messenger.Messenger) {
@@ -19,7 +29,6 @@ func ProcessIncomingMessageWorker(id int, m *messenger.Messenger) {
 			log.Printf("Error: %s\n", err.Error())
 		}
 
-		log.Printf("received message %+v\n", msg.Data)
 		ssvMsg := &types.SSVMessage{}
 		if err := ssvMsg.Decode(msg.Data); err != nil {
 			log.Printf("Error: %s\n", err.Error())
@@ -30,18 +39,44 @@ func ProcessIncomingMessageWorker(id int, m *messenger.Messenger) {
 			log.Printf("Error: %s\n", err.Error())
 		}
 
-		protocolMsg := signedMsg.Message.Data
+		protocolMsg := &frost.ProtocolMsg{}
+		if err := protocolMsg.Decode(signedMsg.Message.Data); err != nil {
+			log.Printf("Error: %s\n", err.Error())
+		}
+
+		log.Printf("received message from %d for msgType %d round %d \n", signedMsg.Signer, signedMsg.Message.MsgType, protocolMsg.Round)
 
 		for _, subscriber := range tp.Subscribers {
-			subscriber.ChMutex.Lock()
+			operatorID := strconv.Itoa(int(signedMsg.Signer))
+			if operatorID == subscriber.Name {
+				continue
+			}
 			subscriber.Outgoing <- msg
-			subscriber.ChMutex.Unlock()
 		}
 	}
 }
 
-func ProcessOutgoingMessageWorker(id int, s *messenger.Subscriber) {
+func ProcessOutgoingMessageWorker(s *messenger.Subscriber) {
 	for msg := range s.Outgoing {
+
+		h := sha256.Sum256(msg.Data)
+		k := base64.RawStdEncoding.EncodeToString(h[:])
+
+		numRetries, ok := s.RetryData[k]
+		if ok {
+			if numRetries >= maxRetriesAllowed {
+				continue
+			} else {
+				s.RetryData[k]++
+			}
+		} else {
+			s.RetryData[k] = 0
+		}
+
+		if numRetries > 0 {
+			time.Sleep(time.Duration(numRetries) * (time.Second))
+		}
+
 		_, exist := s.SubscribesTo[msg.Topic]
 		if !exist {
 			var err = &messenger.ErrTopicNotFound{TopicName: msg.Topic}
@@ -55,8 +90,10 @@ func ProcessOutgoingMessageWorker(id int, s *messenger.Subscriber) {
 			continue
 		}
 
+		respbody, _ := ioutil.ReadAll(resp.Body)
 		if resp.StatusCode != http.StatusOK {
-			var err = fmt.Errorf("failed to publish message to the subscriber %s", s.Name)
+			s.Outgoing <- msg
+			var err = fmt.Errorf("failed to publish message to the subscriber %s %v", s.Name, string(respbody))
 			log.Printf("Error: %s\n", err.Error())
 		}
 		resp.Body.Close()

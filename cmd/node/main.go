@@ -41,11 +41,12 @@ func main() {
 	network := messenger.NewMessengerClient(messengerSrvAddr)
 
 	config := &dkg.Config{
-		KeygenProtocol:  frost.New,
-		ReshareProtocol: frost.NewResharing,
-		Network:         network,
-		Signer:          signer,
-		Storage:         storage,
+		KeygenProtocol:      frost.New,
+		ReshareProtocol:     frost.NewResharing,
+		Network:             network,
+		Signer:              signer,
+		Storage:             storage,
+		SignatureDomainType: types.PrimusTestnet,
 	}
 	node := dkg.NewNode(operator, config)
 	SetRoutes(r.Group(""), node)

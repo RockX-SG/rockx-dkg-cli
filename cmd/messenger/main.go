@@ -2,7 +2,6 @@ package main
 
 import (
 	"os"
-	"sync"
 
 	"github.com/RockX-SG/frost-dkg-demo/internal/handlers"
 	"github.com/RockX-SG/frost-dkg-demo/internal/messenger"
@@ -16,39 +15,38 @@ func main() {
 			messenger.DefaultTopic: {
 				Name: messenger.DefaultTopic,
 				Subscribers: map[string]*messenger.Subscriber{
-					"operator-1": {
-						Name:         "operator-1",
+					"1": {
+						Name:         "1",
 						SrvAddr:      "http://0.0.0.0:8081",
 						SubscribesTo: make(map[string]*messenger.Topic),
-						Outgoing:     make(chan *messenger.Message),
-						ChMutex:      &sync.Mutex{},
+						Outgoing:     make(chan *messenger.Message, 5),
+						RetryData:    make(map[string]int),
 					},
-					"operator-2": {
-						Name:         "operator-2",
+					"2": {
+						Name:         "2",
 						SrvAddr:      "http://0.0.0.0:8082",
 						SubscribesTo: make(map[string]*messenger.Topic),
-						Outgoing:     make(chan *messenger.Message),
-						ChMutex:      &sync.Mutex{},
+						Outgoing:     make(chan *messenger.Message, 5),
+						RetryData:    make(map[string]int),
 					},
-					"operator-3": {
-						Name:         "operator-3",
+					"3": {
+						Name:         "3",
 						SrvAddr:      "http://0.0.0.0:8083",
 						SubscribesTo: make(map[string]*messenger.Topic),
-						Outgoing:     make(chan *messenger.Message),
-						ChMutex:      &sync.Mutex{},
+						Outgoing:     make(chan *messenger.Message, 5),
+						RetryData:    make(map[string]int),
 					},
-					"operator-4": {
-						Name:         "operator-4",
+					"4": {
+						Name:         "4",
 						SrvAddr:      "http://0.0.0.0:8084",
 						SubscribesTo: make(map[string]*messenger.Topic),
-						Outgoing:     make(chan *messenger.Message),
-						ChMutex:      &sync.Mutex{},
+						Outgoing:     make(chan *messenger.Message, 5),
+						RetryData:    make(map[string]int),
 					},
 				},
 			},
 		},
 		Incoming: make(chan *messenger.Message),
-		ChMutex:  &sync.Mutex{},
 		Data:     make(map[string]*messenger.DataStore),
 	}
 
@@ -56,7 +54,7 @@ func main() {
 
 	for _, sub := range m.Topics[messenger.DefaultTopic].Subscribers {
 		sub.SubscribesTo[messenger.DefaultTopic] = m.Topics[messenger.DefaultTopic]
-		go workers.ProcessOutgoingMessageWorker(1, sub)
+		go workers.ProcessOutgoingMessageWorker(sub)
 	}
 
 	r := gin.Default()
