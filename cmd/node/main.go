@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"strconv"
 
 	"github.com/RockX-SG/frost-dkg-demo/internal/messenger"
 	"github.com/RockX-SG/frost-dkg-demo/internal/node"
+	"github.com/RockX-SG/frost-dkg-demo/internal/ping"
 	"github.com/bloxapp/ssv-spec/dkg"
 	"github.com/bloxapp/ssv-spec/dkg/frost"
 	"github.com/bloxapp/ssv-spec/types"
@@ -37,13 +37,10 @@ func main() {
 		panic(err)
 	}
 
-	r := gin.New()
-	r.GET("/ping", func(ctx *gin.Context) {
-		ctx.JSON(http.StatusOK, gin.H{
-			"message": "pong",
-		})
-	})
+	r := gin.Default()
+	r.GET("/ping", ping.HandlePing)
 	r.POST("/consume", node.HandleConsume(thisNode))
+
 	panic(r.Run(nodeAddr))
 }
 

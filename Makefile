@@ -3,7 +3,7 @@ GOBIN = $(GOBASE)/build/bin
 GOCMD = $(GOBASE)/cmd
 
 build:
-	go build -o $(GOBIN)/frostdkgdemo  $(GOCMD)/frostdkgdemo/main.go
+	go build -o $(GOBIN)/api  $(GOCMD)/api/main.go
 
 build_messenger:
 	go build -o $(GOBIN)/messenger  $(GOCMD)/messenger/main.go

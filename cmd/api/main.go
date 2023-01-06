@@ -1,0 +1,25 @@
+package main
+
+import (
+	"os"
+
+	"github.com/RockX-SG/frost-dkg-demo/internal/api"
+	"github.com/RockX-SG/frost-dkg-demo/internal/ping"
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	addr := os.Getenv("API_ADDR")
+	if addr == "" {
+		addr = "0.0.0.0:8000"
+	}
+
+	h := api.New()
+
+	r := gin.Default()
+	r.GET("/ping", ping.HandlePing)
+	r.GET("/data/:request_id", h.HandleGetData)
+	r.POST("/keygen", h.HandleKeygen)
+
+	panic(r.Run(addr))
+}

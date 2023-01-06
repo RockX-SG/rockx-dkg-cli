@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 
 	"github.com/RockX-SG/frost-dkg-demo/internal/messenger"
+	"github.com/RockX-SG/frost-dkg-demo/internal/ping"
 	"github.com/RockX-SG/frost-dkg-demo/internal/workers"
 	"github.com/gin-gonic/gin"
 )
@@ -34,12 +34,13 @@ func main() {
 		sub.SubscribesTo[messenger.DefaultTopic] = m.Topics[messenger.DefaultTopic]
 	}
 
+	messengerAddr := os.Getenv("MESSENGER_ADDR")
+	if messengerAddr == "" {
+		messengerAddr = "0.0.0.0:3000"
+	}
+
 	r := gin.Default()
-	r.GET("/ping", func(ctx *gin.Context) {
-		ctx.JSON(http.StatusOK, gin.H{
-			"message": "pong",
-		})
-	})
+	r.GET("/ping", ping.HandlePing)
 
 	// node registration
 	r.POST("/register_node", messenger.HandleNodeRegistration(runner, m))
@@ -50,9 +51,5 @@ func main() {
 	r.POST("/stream/dkgblame", messenger.HandleStreamDKGBlame(m))
 	r.GET("/data/:request_id", messenger.HandleGetData(m))
 
-	HttpAddr := os.Getenv("MESSENGER_ADDR")
-	if HttpAddr == "" {
-		HttpAddr = "0.0.0.0:3000"
-	}
-	panic(r.Run(HttpAddr))
+	panic(r.Run(messengerAddr))
 }
