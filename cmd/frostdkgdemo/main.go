@@ -2,9 +2,12 @@ package main
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
+	"time"
 
 	"github.com/bloxapp/ssv-spec/dkg"
 	"github.com/bloxapp/ssv-spec/types"
@@ -23,9 +26,24 @@ func main() {
 	ks := testingutils.TestingKeygenKeySet()
 	requestID := testingutils.GetRandRequestID()
 
-	// log.Println(hex.EncodeToString(requestID[:]))
+	log.Printf("RequestID: %s\n", hex.EncodeToString(requestID[:]))
+
+	var netTransport = &http.Transport{
+		Dial: (&net.Dialer{
+			Timeout: 5 * time.Second,
+		}).Dial,
+		TLSHandshakeTimeout: 5 * time.Second,
+		DisableKeepAlives:   true,
+	}
+
+	netClient := &http.Client{
+		Timeout:   10 * time.Second,
+		Transport: netTransport,
+	}
 
 	for _, operatorID := range operators {
+		nodeAddr := nodes[operatorID]
+
 		init := testingutils.InitMessageData(
 			operators,
 			uint16(threshold),
@@ -45,21 +63,23 @@ func main() {
 			MsgType: types.DKGMsgType,
 			Data:    byts,
 		}
-		msgBytes, _ := msg.Encode()
 
-		log.Printf("operatorID %d :: %s %d\n", operatorID, string(msgBytes), len(msgBytes))
-
-		url := fmt.Sprintf("%s/consume", nodes[operatorID])
-		req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(msgBytes))
+		msgBytes, err := msg.Encode()
 		if err != nil {
 			panic(err)
 		}
-		http.DefaultClient.CloseIdleConnections()
-		resp, err := http.DefaultClient.Do(req)
+
+		url := fmt.Sprintf("%s/consume", nodeAddr)
+		req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(msgBytes))
+		if err != nil {
+			log.Fatal(err)
+		}
+		req.Header.Add("Content-Type", "application/json")
+
+		resp, err := netClient.Do(req)
 		if err != nil {
 			panic(err)
 		}
 		defer resp.Body.Close()
-		fmt.Println(resp.StatusCode)
 	}
 }

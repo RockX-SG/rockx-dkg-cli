@@ -33,11 +33,11 @@ func main() {
 	thisNode := dkg.NewNode(thisOperator(uint32(operatorID), storage), config)
 
 	// register with the messenger
-	if err := network.RegisterOperatorNode(strconv.Itoa(int(operatorID)), fmt.Sprintf("http://%s", nodeAddr)); err != nil {
+	if err := network.RegisterOperatorNode(strconv.Itoa(int(operatorID)), fmt.Sprintf("http://%s", os.Getenv("NODE_BROADCAST_ADDR"))); err != nil {
 		panic(err)
 	}
 
-	r := gin.Default()
+	r := gin.New()
 	r.GET("/ping", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{
 			"message": "pong",

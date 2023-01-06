@@ -3,7 +3,7 @@ package messenger
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 
@@ -15,13 +15,11 @@ import (
 
 func HandleNodeRegistration(runner *workers.Runner, m *Messenger) func(*gin.Context) {
 	return func(c *gin.Context) {
+
 		subscribesTo := c.Query("subscribes_to")
 		_, exist := m.Topics[subscribesTo]
 		if !exist {
-			var err error = &ErrTopicNotFound{
-				TopicName: subscribesTo,
-			}
-			log.Println("topic doesn't exists")
+			err := &ErrTopicNotFound{TopicName: subscribesTo}
 			c.JSON(http.StatusBadRequest, gin.H{
 				"message": "topic for subscription doesn't exist",
 				"error":   err.Error(),
@@ -29,9 +27,13 @@ func HandleNodeRegistration(runner *workers.Runner, m *Messenger) func(*gin.Cont
 			return
 		}
 
-		subscriber := &Subscriber{}
-		body, _ := ioutil.ReadAll(c.Request.Body)
+		subscriber := &Subscriber{
+			SubscribesTo: map[string]*Topic{},
+			Outgoing:     make(chan *Message, 5),
+			RetryData:    make(map[string]int),
+		}
 
+		body, _ := io.ReadAll(c.Request.Body)
 		if err := json.Unmarshal(body, subscriber); err != nil {
 			log.Println("failed to parse subscriber")
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -41,24 +43,19 @@ func HandleNodeRegistration(runner *workers.Runner, m *Messenger) func(*gin.Cont
 			return
 		}
 
-		subscriber.SubscribesTo = map[string]*Topic{}
-		subscriber.Outgoing = make(chan *Message, 5)
-		subscriber.RetryData = make(map[string]int)
-
 		if subscriber.Name == "" || subscriber.SrvAddr == "" {
 			err := fmt.Errorf("Error: empty name %s or addr %s", subscriber.Name, subscriber.SrvAddr)
-			log.Println(err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{
 				"message": "invalid subscriber data: empty name or addr",
-				"error":   fmt.Errorf("Error: %s", err.Error()),
+				"error":   err.Error(),
 			})
 			return
 		}
 
-		sub, ok := m.Topics[subscribesTo].Subscribers[subscriber.Name]
+		existingSubscriber, ok := m.Topics[subscribesTo].Subscribers[subscriber.Name]
 		if ok {
-			sub.SrvAddr = subscriber.SrvAddr
-			m.Topics[subscribesTo].Subscribers[subscriber.Name] = sub
+			existingSubscriber.SrvAddr = subscriber.SrvAddr
+			m.Topics[subscribesTo].Subscribers[subscriber.Name] = existingSubscriber
 		} else {
 			subscriber.Outgoing = make(chan *Message, 5)
 			subscriber.RetryData = make(map[string]int)
@@ -67,18 +64,18 @@ func HandleNodeRegistration(runner *workers.Runner, m *Messenger) func(*gin.Cont
 
 			runner.AddJob(&workers.Job{
 				ID: fmt.Sprintf("SUBSCRIBER__%s", subscriber.Name),
-				Fn: sub.ProcessOutgoingMessageWorker,
+				Fn: m.Topics[subscribesTo].Subscribers[subscriber.Name].ProcessOutgoingMessageWorker,
 			})
 		}
-
 		c.JSON(http.StatusOK, nil)
 	}
 }
 
 func HandlePublish(m *Messenger) func(*gin.Context) {
 	return func(c *gin.Context) {
+
 		topicName := c.Query("topic_name")
-		data, err := ioutil.ReadAll(c.Request.Body)
+		data, err := io.ReadAll(c.Request.Body)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"message": "failed to load data from request body",
@@ -105,6 +102,7 @@ func HandlePublish(m *Messenger) func(*gin.Context) {
 
 func HandleGetData(m *Messenger) func(*gin.Context) {
 	return func(c *gin.Context) {
+
 		requestID := c.Param("request_id")
 		if requestID == "" {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -114,13 +112,18 @@ func HandleGetData(m *Messenger) func(*gin.Context) {
 			return
 		}
 
-		data, _ := json.Marshal(m.Data[requestID])
-		c.JSON(http.StatusOK, data)
+		_, ok := m.Data[requestID]
+		if !ok {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+		c.JSON(http.StatusOK, m.Data[requestID])
 	}
 }
 
 func HandleStreamDKGOutput(m *Messenger) func(*gin.Context) {
 	return func(c *gin.Context) {
+
 		requestID := c.Query("request_id")
 		if requestID == "" {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -130,7 +133,7 @@ func HandleStreamDKGOutput(m *Messenger) func(*gin.Context) {
 			return
 		}
 
-		body, _ := ioutil.ReadAll(c.Request.Body)
+		body, _ := io.ReadAll(c.Request.Body)
 		data := make(map[types.OperatorID]*dkg.SignedOutput)
 		if err := json.Unmarshal(body, &data); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -149,6 +152,7 @@ func HandleStreamDKGOutput(m *Messenger) func(*gin.Context) {
 
 func HandleStreamDKGBlame(m *Messenger) func(*gin.Context) {
 	return func(c *gin.Context) {
+
 		requestID := c.Query("request_id")
 		if requestID == "" {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -158,7 +162,7 @@ func HandleStreamDKGBlame(m *Messenger) func(*gin.Context) {
 			return
 		}
 
-		body, _ := ioutil.ReadAll(c.Request.Body)
+		body, _ := io.ReadAll(c.Request.Body)
 		data := make(map[types.OperatorID]*dkg.SignedOutput)
 		if err := json.Unmarshal(body, &data); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{

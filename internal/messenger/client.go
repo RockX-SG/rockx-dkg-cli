@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/bloxapp/ssv-spec/dkg"
@@ -47,42 +48,56 @@ func (cl *Client) StreamDKGOutput(output map[types.OperatorID]*dkg.SignedOutput)
 }
 
 func (cl *Client) BroadcastDKGMessage(msg *dkg.SignedMessage) error {
-	data, err := msg.Encode()
+	msgBytes, err := msg.Encode()
 	if err != nil {
 		return err
 	}
 
-	return cl.publish(DefaultTopic, data)
+	ssvMsg := types.SSVMessage{
+		MsgType: types.DKGMsgType,
+		Data:    msgBytes,
+	}
+	ssvMsgBytes, _ := ssvMsg.Encode()
+
+	return cl.publish(DefaultTopic, ssvMsgBytes)
 }
 
 func (cl *Client) RegisterOperatorNode(id, addr string) error {
-	sub := &Subscriber{
-		Name:    id,
-		SrvAddr: addr,
-	}
-	byts, _ := json.Marshal(sub)
+	numtries := 3
+	try := 1
 
-	url := fmt.Sprintf("%s/register_node?subscribes_to=%s", cl.SrvAddr, DefaultTopic)
-	resp, err := http.Post(url, "application/json", bytes.NewReader(byts))
-	if err != nil {
-		return err
+	for ; try <= numtries; try++ {
+		sub := &Subscriber{
+			Name:    id,
+			SrvAddr: addr,
+		}
+		byts, _ := json.Marshal(sub)
+
+		url := fmt.Sprintf("%s/register_node?subscribes_to=%s", cl.SrvAddr, DefaultTopic)
+		resp, err := http.Post(url, "application/json", bytes.NewReader(byts))
+		if err != nil {
+			err := fmt.Errorf("failed to make request to messenger")
+			log.Printf("Error: %s\n", err.Error())
+			continue
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			err := fmt.Errorf("failed to register operator of ID %s with the messenger on %d try", sub.Name, try)
+			log.Printf("Error: %s\n", err.Error())
+		} else {
+			break
+		}
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to register operator node (id %s) with the messenger", id)
+	if try > numtries {
+		return fmt.Errorf("failed to register this node even after %d tried", numtries)
 	}
 	return nil
 }
 
 func (cl *Client) publish(topicName string, data []byte) error {
-	msg := types.SSVMessage{
-		MsgType: types.DKGMsgType,
-		Data:    data,
-	}
-
-	byts, _ := msg.Encode()
-
-	resp, err := http.Post(fmt.Sprintf("%s/publish?topic_name=%s", cl.SrvAddr, DefaultTopic), "application/json", bytes.NewReader(byts))
+	resp, err := http.Post(fmt.Sprintf("%s/publish?topic_name=%s", cl.SrvAddr, DefaultTopic), "application/json", bytes.NewBuffer(data))
 	if err != nil {
 		return err
 	}
@@ -95,7 +110,7 @@ func (cl *Client) publish(topicName string, data []byte) error {
 }
 
 func (cl *Client) stream(urlparam string, requestID string, data []byte) error {
-	resp, err := http.Post(fmt.Sprintf("%s/stream/%s?request_id=%s", cl.SrvAddr, urlparam, requestID), "application/json", bytes.NewReader(data))
+	resp, err := http.Post(fmt.Sprintf("%s/stream/%s?request_id=%s", cl.SrvAddr, urlparam, requestID), "application/json", bytes.NewBuffer(data))
 	if err != nil {
 		return err
 	}

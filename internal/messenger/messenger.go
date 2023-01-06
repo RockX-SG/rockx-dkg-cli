@@ -6,7 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -128,16 +128,18 @@ func (s *Subscriber) ProcessOutgoingMessageWorker(ctx *context.Context) {
 			continue
 		}
 
-		resp, err := http.Post(fmt.Sprintf("%s/consume", s.SrvAddr), "application/json", bytes.NewReader(msg.Data))
+		resp, err := http.Post(fmt.Sprintf("%s/consume", s.SrvAddr), "application/json", bytes.NewBuffer(msg.Data))
 		if err != nil {
 			log.Printf("Error: %s\n", err.Error())
 			continue
 		}
 
-		respbody, _ := ioutil.ReadAll(resp.Body)
+		// TODO: remove this after testing
+		respbody, _ := io.ReadAll(resp.Body)
 		if resp.StatusCode != http.StatusOK {
 			s.Outgoing <- msg
-			var err = fmt.Errorf("failed to publish message to the subscriber %s %v", s.Name, string(respbody))
+
+			err := fmt.Errorf("failed to publish message to the subscriber %s %v", s.Name, string(respbody))
 			log.Printf("Error: %s\n", err.Error())
 		}
 		resp.Body.Close()

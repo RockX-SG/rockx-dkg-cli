@@ -18,7 +18,7 @@ func main() {
 				Subscribers: make(map[string]*messenger.Subscriber),
 			},
 		},
-		Incoming: make(chan *messenger.Message),
+		Incoming: make(chan *messenger.Message, 5),
 		Data:     make(map[string]*messenger.DataStore),
 	}
 
@@ -27,6 +27,8 @@ func main() {
 		ID: fmt.Sprintf("TOPIC__%s", messenger.DefaultTopic),
 		Fn: m.ProcessIncomingMessageWorker,
 	})
+
+	go runner.Run()
 
 	for _, sub := range m.Topics[messenger.DefaultTopic].Subscribers {
 		sub.SubscribesTo[messenger.DefaultTopic] = m.Topics[messenger.DefaultTopic]

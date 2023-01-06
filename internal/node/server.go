@@ -1,7 +1,7 @@
 package node
 
 import (
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 
@@ -12,7 +12,7 @@ import (
 
 func HandleConsume(node *dkg.Node) func(*gin.Context) {
 	return func(c *gin.Context) {
-		data, err := ioutil.ReadAll(c.Request.Body)
+		data, err := io.ReadAll(c.Request.Body)
 		if err != nil {
 			log.Printf("Error: %s\n", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{
