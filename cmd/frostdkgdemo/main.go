@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/hex"
 	"fmt"
 	"log"
 	"net/http"
@@ -24,7 +23,7 @@ func main() {
 	ks := testingutils.TestingKeygenKeySet()
 	requestID := testingutils.GetRandRequestID()
 
-	log.Println(hex.EncodeToString(requestID[:]))
+	// log.Println(hex.EncodeToString(requestID[:]))
 
 	for _, operatorID := range operators {
 		init := testingutils.InitMessageData(
@@ -48,12 +47,19 @@ func main() {
 		}
 		msgBytes, _ := msg.Encode()
 
-		resp, err := http.Post(fmt.Sprintf("%s/consume", nodes[operatorID]), "application/json", bytes.NewReader(msgBytes))
+		log.Printf("operatorID %d :: %s %d\n", operatorID, string(msgBytes), len(msgBytes))
+
+		url := fmt.Sprintf("%s/consume", nodes[operatorID])
+		req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(msgBytes))
 		if err != nil {
 			panic(err)
 		}
-
+		http.DefaultClient.CloseIdleConnections()
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			panic(err)
+		}
+		defer resp.Body.Close()
 		fmt.Println(resp.StatusCode)
-		resp.Body.Close()
 	}
 }

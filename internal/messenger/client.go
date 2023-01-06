@@ -63,17 +63,10 @@ func (cl *Client) RegisterOperatorNode(id, addr string) error {
 	byts, _ := json.Marshal(sub)
 
 	url := fmt.Sprintf("%s/register_node?subscribes_to=%s", cl.SrvAddr, DefaultTopic)
-	req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(byts))
+	resp, err := http.Post(url, "application/json", bytes.NewReader(byts))
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("failed to register operator node (id %s) with the messenger", id)

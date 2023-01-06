@@ -4,14 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 
+	"github.com/RockX-SG/frost-dkg-demo/internal/workers"
 	"github.com/bloxapp/ssv-spec/dkg"
 	"github.com/bloxapp/ssv-spec/types"
 	"github.com/gin-gonic/gin"
 )
 
-func HandleNodeRegistration(m *Messenger) func(*gin.Context) {
+func HandleNodeRegistration(runner *workers.Runner, m *Messenger) func(*gin.Context) {
 	return func(c *gin.Context) {
 		subscribesTo := c.Query("subscribes_to")
 		_, exist := m.Topics[subscribesTo]
@@ -19,6 +21,7 @@ func HandleNodeRegistration(m *Messenger) func(*gin.Context) {
 			var err error = &ErrTopicNotFound{
 				TopicName: subscribesTo,
 			}
+			log.Println("topic doesn't exists")
 			c.JSON(http.StatusBadRequest, gin.H{
 				"message": "topic for subscription doesn't exist",
 				"error":   err.Error(),
@@ -27,7 +30,10 @@ func HandleNodeRegistration(m *Messenger) func(*gin.Context) {
 		}
 
 		subscriber := &Subscriber{}
-		if err := c.ShouldBindJSON(subscriber); err != nil {
+		body, _ := ioutil.ReadAll(c.Request.Body)
+
+		if err := json.Unmarshal(body, subscriber); err != nil {
+			log.Println("failed to parse subscriber")
 			c.JSON(http.StatusBadRequest, gin.H{
 				"message": "failed to parse subscriber data from the request body",
 				"error":   err.Error(),
@@ -40,9 +46,11 @@ func HandleNodeRegistration(m *Messenger) func(*gin.Context) {
 		subscriber.RetryData = make(map[string]int)
 
 		if subscriber.Name == "" || subscriber.SrvAddr == "" {
+			err := fmt.Errorf("Error: empty name %s or addr %s", subscriber.Name, subscriber.SrvAddr)
+			log.Println(err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{
 				"message": "invalid subscriber data: empty name or addr",
-				"error":   fmt.Errorf("Error: empty name %s or addr %s", subscriber.Name, subscriber.SrvAddr),
+				"error":   fmt.Errorf("Error: %s", err.Error()),
 			})
 			return
 		}
@@ -56,6 +64,11 @@ func HandleNodeRegistration(m *Messenger) func(*gin.Context) {
 			subscriber.RetryData = make(map[string]int)
 			subscriber.SubscribesTo[subscribesTo] = m.Topics[subscribesTo]
 			m.Topics[subscribesTo].Subscribers[subscriber.Name] = subscriber
+
+			runner.AddJob(&workers.Job{
+				ID: fmt.Sprintf("SUBSCRIBER__%s", subscriber.Name),
+				Fn: sub.ProcessOutgoingMessageWorker,
+			})
 		}
 
 		c.JSON(http.StatusOK, nil)

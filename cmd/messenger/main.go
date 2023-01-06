@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -21,8 +22,11 @@ func main() {
 		Data:     make(map[string]*messenger.DataStore),
 	}
 
-	go workers.ProcessIncomingMessageWorker(1, m)
-	go workers.ProcessOutgoingMessageWorker(m)
+	runner := workers.NewRunner()
+	runner.AddJob(&workers.Job{
+		ID: fmt.Sprintf("TOPIC__%s", messenger.DefaultTopic),
+		Fn: m.ProcessIncomingMessageWorker,
+	})
 
 	for _, sub := range m.Topics[messenger.DefaultTopic].Subscribers {
 		sub.SubscribesTo[messenger.DefaultTopic] = m.Topics[messenger.DefaultTopic]
@@ -36,7 +40,7 @@ func main() {
 	})
 
 	// node registration
-	r.PUT("/register_node", messenger.HandleNodeRegistration(m))
+	r.POST("/register_node", messenger.HandleNodeRegistration(runner, m))
 
 	// setup api routes
 	r.POST("/publish", messenger.HandlePublish(m))

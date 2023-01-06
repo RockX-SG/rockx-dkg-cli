@@ -5,6 +5,5 @@ RUN      go mod download && make build_messenger
 
 FROM     ubuntu:18.04
 WORKDIR  /app
-EXPOSE   3000
 COPY     --from=builder /app/build/bin/messenger /app/messenger
 CMD      ["./messenger"] 
