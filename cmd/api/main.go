@@ -19,6 +19,8 @@ func main() {
 	r := gin.Default()
 	r.GET("/ping", ping.HandlePing)
 	r.GET("/data/:request_id", h.HandleGetData)
+	r.GET("/deposit_data/:request_id", h.HandleGetDepositData)
+	r.GET("/data/:request_id/:operator_id", h.HandleGetDataByOperatorID)
 	r.POST("/keygen", h.HandleKeygen)
 
 	panic(r.Run(addr))

@@ -7,13 +7,14 @@ replace github.com/bloxapp/ssv-spec v0.2.7 => github.com/RockX-SG/ssv-spec v0.1.
 replace github.com/coinbase/kryptology => github.com/RockX-SG/kryptology v1.5.6-0.20221017030241-a65fc893311e
 
 require (
+	github.com/attestantio/go-eth2-client v0.11.3
 	github.com/bloxapp/ssv-spec v0.2.7
 	github.com/gin-gonic/gin v1.8.2
+	github.com/herumi/bls-eth-go-binary v0.0.0-20220509081320-2d8ab06de53c
 )
 
 require (
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
-	github.com/attestantio/go-eth2-client v0.11.3 // indirect
 	github.com/btcsuite/btcd v0.21.0-beta.0.20201114000516-e9c7a5ac6401 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
 	github.com/bwesterb/go-ristretto v1.2.0 // indirect
@@ -30,7 +31,6 @@ require (
 	github.com/go-playground/validator/v10 v10.11.1 // indirect
 	github.com/goccy/go-json v0.9.11 // indirect
 	github.com/goccy/go-yaml v1.9.5 // indirect
-	github.com/herumi/bls-eth-go-binary v0.0.0-20220509081320-2d8ab06de53c // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.11 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
