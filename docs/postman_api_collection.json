@@ -1,0 +1,133 @@
+{
+	"info": {
+		"_postman_id": "c7dffe8f-141c-4b94-b66c-2eeea72370f3",
+		"name": "Frost DKG Demo",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "22802001"
+	},
+	"item": [
+		{
+			"name": "Create Keygen Request",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"operators\": {\n        \"1\": \"http://host.docker.internal:8081\",\n        \"2\": \"http://host.docker.internal:8082\",\n        \"3\": \"http://host.docker.internal:8083\",\n        \"4\": \"http://host.docker.internal:8084\"\n    },\n    \"threshold\": 3,\n    \"withdrawal_credentials\": \"010000000000000000000000535953b5a6040074948cf185eaa7d2abbd66808f\",\n    \"fork_version\": \"prater\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://0.0.0.0:8000/keygen",
+					"protocol": "http",
+					"host": [
+						"0",
+						"0",
+						"0",
+						"0"
+					],
+					"port": "8000",
+					"path": [
+						"keygen"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Data",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://0.0.0.0:8000/data/:request_id",
+					"protocol": "http",
+					"host": [
+						"0",
+						"0",
+						"0",
+						"0"
+					],
+					"port": "8000",
+					"path": [
+						"data",
+						":request_id"
+					],
+					"variable": [
+						{
+							"key": "request_id",
+							"value": ""
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Deposit Data",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://0.0.0.0:8000/deposit_data/:request_id",
+					"protocol": "http",
+					"host": [
+						"0",
+						"0",
+						"0",
+						"0"
+					],
+					"port": "8000",
+					"path": [
+						"deposit_data",
+						":request_id"
+					],
+					"variable": [
+						{
+							"key": "request_id",
+							"value": ""
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Data By OperatorID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://0.0.0.0:8000/data/:request_id/:operator_id",
+					"protocol": "http",
+					"host": [
+						"0",
+						"0",
+						"0",
+						"0"
+					],
+					"port": "8000",
+					"path": [
+						"data",
+						":request_id",
+						":operator_id"
+					],
+					"variable": [
+						{
+							"key": "request_id",
+							"value": ""
+						},
+						{
+							"key": "operator_id",
+							"value": ""
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
