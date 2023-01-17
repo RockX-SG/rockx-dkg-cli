@@ -59,19 +59,21 @@ curl --location --request POST 'http://0.0.0.0:8000/keygen' \
         "3": "http://host.docker.internal:8083",
         "4": "http://host.docker.internal:8084"
     },
-    "threshold": 3
+    "threshold": 3,
+    "withdrawal_credentials": "010000000000000000000000535953b5a6040074948cf185eaa7d2abbd66808f",
+    "fork_version": "prater"
 }'
 ```
 The API will return a request ID in the following format:
 ```
 {
-    "request_id": "5d2aea535cd70f5a18f78b83953444e2eeb5a978902edb21"
+    "request_id": "59c971e3477e19b48fc467bb6e300d8eab34cf32ae7eba35"
 }
 ```
 ### Viewing Results
 To view the results of a key generation process, use the request ID returned from the previous step and make a GET request to the /data/{request_id} endpoint:
 ```
-curl --location --request GET 'http://0.0.0.0:8000/data/5d2aea535cd70f5a18f78b83953444e2eeb5a978902edb21'
+curl --location --request GET 'http://0.0.0.0:8000/data/59c971e3477e19b48fc467bb6e300d8eab34cf32ae7eba35'
 ```
 This will return the results of the key generation process with the given request ID.
 
@@ -82,9 +84,9 @@ To verify results, use Verify tool with Validator Public Key and Deposit Data si
 make build_verify
 
 # Run verify tool
-# ./build/bin/verify <validator_public_key> <deposit_data_sig>
+# ./build/bin/verify <fork_version> <validator_public_key> <deposit_data_sig> <withdrawal credentials>
 
-./build/bin/verify 92b0a3da8664b1aa8579267393477229e2d46dff2876f820f51a44e9cfd2aeafa61b54e33c4265a7f68c94b86fcce181 8eb4d37745365e0b9f782b05c578b20d1998c9fcb35bbc597d495ea840ea6e104be83ed81fe500134fed8e7f029e0c9f0096b441f82a7fe6695fbc449456751aa1a3625e97f983309637db348994f262e4f263b85eb463782b75a6b8ea0a054c
+./build/bin/verify prater 87d7a269ec845bd363fd2c6b2e8e61d5314725d5456ca5c4c8397d33d3052bb2c641e50ee78939f9deed429dff4f48ad 8ea5d0dddec9aa797fbb624c5732ea47fea89cc63adb391e15892e7b849a86edc93de80bace9cc06d85243d92c718fbb0c2cef9a8f5dd61f7af534ff1c211966fa581605410ea5bc13848a52626a612d690d5f8aabc80c0b619be2ef785ed88d 010000000000000000000000535953b5a6040074948cf185eaa7d2abbd66808f
 
 # Output
 # ~ signature verification succeeded
@@ -93,7 +95,7 @@ make build_verify
 To download deposit data run the following command in the browser. It will download a json file with name of format `deposit-data_*.json`
 ```
 http://0.0.0.0:8000/deposit_data/<request_id>'
-# for eg. http://0.0.0.0:8000/deposit_data/b1e3e5d676b6829a7f9115f936e244a72fea9c448c7fcde3
+# for eg. http://0.0.0.0:8000/deposit_data/59c971e3477e19b48fc467bb6e300d8eab34cf32ae7eba35
 ```
 
 The downloaded file can be verified at https://goerli.launchpad.ethereum.org/en/overview
