@@ -2,7 +2,7 @@ module github.com/RockX-SG/frost-dkg-demo
 
 go 1.19
 
-replace github.com/bloxapp/ssv-spec v0.2.7 => github.com/RockX-SG/ssv-spec v0.1.2
+replace github.com/bloxapp/ssv-spec v0.2.7 => github.com/RockX-SG/ssv-spec v0.1.3-0.20230126062155-653ecf6e6439
 
 replace github.com/coinbase/kryptology => github.com/RockX-SG/kryptology v1.5.6-0.20221017030241-a65fc893311e
 

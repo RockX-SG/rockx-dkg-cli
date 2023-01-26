@@ -22,16 +22,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type KeygenReq struct {
-	Operators            map[types.OperatorID]string `json:"operators"`
-	Threshold            int                         `json:"threshold"`
-	WithdrawalCredential string                      `json:"withdrawal_credentials"`
-	ForkVersion          string                      `json:"fork_version"`
-}
-
 type Apihandler struct {
-	client   *http.Client
-	requests map[string]*KeygenReq
+	client            *http.Client
+	requests          map[string]*KeygenReq
+	resharingrequests map[string]*ResharingReq
 }
 
 func New() *Apihandler {
@@ -50,6 +44,13 @@ func New() *Apihandler {
 		},
 		requests: make(map[string]*KeygenReq),
 	}
+}
+
+type KeygenReq struct {
+	Operators            map[types.OperatorID]string `json:"operators"`
+	Threshold            int                         `json:"threshold"`
+	WithdrawalCredential string                      `json:"withdrawal_credentials"`
+	ForkVersion          string                      `json:"fork_version"`
 }
 
 func (h *Apihandler) HandleKeygen(c *gin.Context) {
@@ -125,6 +126,107 @@ func (h *Apihandler) HandleKeygen(c *gin.Context) {
 	}
 
 	h.requests[hex.EncodeToString(requestID[:])] = req
+	c.JSON(http.StatusOK, gin.H{
+		"request_id": hex.EncodeToString(requestID[:]),
+	})
+}
+
+type ResharingReq struct {
+	Operators    map[types.OperatorID]string `json:"operators"`
+	Threshold    int                         `json:"threshold"`
+	ValidatorPK  string                      `json:"validator_pk"`
+	OperatorsOld map[types.OperatorID]string `json:"operators_old"`
+	KeygenReqID  string                      `json:"keygen_request_id"`
+}
+
+func (h *Apihandler) HandleResharing(c *gin.Context) {
+
+	req := &ResharingReq{}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "failed to parse resharing req from body",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	vk, _ := hex.DecodeString(req.ValidatorPK)
+
+	ks := testingutils.TestingKeygenKeySet()
+	requestID := testingutils.GetRandRequestID()
+
+	operators := []types.OperatorID{}
+	for operatorID, _ := range req.Operators {
+		operators = append(operators, operatorID)
+	}
+
+	operatorsOld := []types.OperatorID{}
+	for operatorID, _ := range req.OperatorsOld {
+		operatorsOld = append(operatorsOld, operatorID)
+	}
+
+	alloperators := append(operators, operatorsOld...)
+
+	for _, operatorID := range alloperators {
+
+		var nodeAddr string
+		_, ok := req.Operators[operatorID]
+		if ok {
+			nodeAddr = req.Operators[operatorID]
+		} else {
+			nodeAddr = req.OperatorsOld[operatorID]
+		}
+
+		reshare := testingutils.ReshareMessageData(
+			operators,
+			uint16(req.Threshold),
+			vk,
+			operatorsOld,
+		)
+		reshareBytes, _ := reshare.Encode()
+
+		reshareMsg := testingutils.SignDKGMsg(ks.DKGOperators[operatorID].SK, operatorID, &dkg.Message{
+			MsgType:    dkg.ReshareMsgType,
+			Identifier: requestID,
+			Data:       reshareBytes,
+		})
+		byts, _ := reshareMsg.Encode()
+
+		msg := &types.SSVMessage{
+			MsgType: types.DKGMsgType,
+			Data:    byts,
+		}
+
+		msgBytes, err := msg.Encode()
+		if err != nil {
+			panic(err)
+		}
+
+		url := fmt.Sprintf("%s/consume", nodeAddr)
+		req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(msgBytes))
+		if err != nil {
+			log.Fatal(err)
+		}
+		req.Header.Add("Content-Type", "application/json")
+
+		resp, err := h.client.Do(req)
+		if err != nil {
+			panic(err)
+		}
+		defer resp.Body.Close()
+
+		respBody, _ := io.ReadAll(resp.Body)
+
+		if resp.StatusCode != http.StatusOK {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+				"message": fmt.Sprintf("failed to send reshare message to operator %d", operatorID),
+				"error":   string(respBody),
+			})
+			return
+		}
+	}
+
+	h.resharingrequests[hex.EncodeToString(requestID[:])] = req
 	c.JSON(http.StatusOK, gin.H{
 		"request_id": hex.EncodeToString(requestID[:]),
 	})

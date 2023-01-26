@@ -62,3 +62,47 @@ services:
     restart: on-failure
     ports: 
       - 8084:8084
+  operator-5:
+    build:
+      context: ./
+      dockerfile: build/docker/node/Dockerfile
+    command: ./node
+    depends_on:
+      - "messenger"
+    env_file: env/operator.5.env
+    restart: on-failure
+    ports: 
+      - 8085:8085
+  operator-6:
+    build:
+      context: ./
+      dockerfile: build/docker/node/Dockerfile
+    command: ./node
+    depends_on:
+      - "messenger"
+    env_file: env/operator.6.env
+    restart: on-failure
+    ports: 
+      - 8086:8086
+  operator-7:
+    build:
+      context: ./
+      dockerfile: build/docker/node/Dockerfile
+    command: ./node
+    depends_on:
+      - "messenger"
+    env_file: env/operator.7.env
+    restart: on-failure
+    ports: 
+      - 8087:8087
+  operator-8:
+    build:
+      context: ./
+      dockerfile: build/docker/node/Dockerfile
+    command: ./node
+    depends_on:
+      - "messenger"
+    env_file: env/operator.8.env
+    restart: on-failure
+    ports: 
+      - 8088:8088

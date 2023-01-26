@@ -22,6 +22,7 @@ func main() {
 	r.GET("/deposit_data/:request_id", h.HandleGetDepositData)
 	r.GET("/data/:request_id/:operator_id", h.HandleGetDataByOperatorID)
 	r.POST("/keygen", h.HandleKeygen)
+	r.POST("/resharing", h.HandleResharing)
 
 	panic(r.Run(addr))
 }
