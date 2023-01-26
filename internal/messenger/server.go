@@ -71,6 +71,41 @@ func HandleNodeRegistration(runner *workers.Runner, m *Messenger) func(*gin.Cont
 	}
 }
 
+type CreateTopicReq struct {
+	TopicName   string   `json:"topic_name"`
+	Subscribers []string `json:"subscribers"`
+}
+
+func HandleCreateTopic(m *Messenger) func(*gin.Context) {
+	return func(c *gin.Context) {
+		req := &CreateTopicReq{}
+		if err := c.ShouldBindJSON(req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "failed to load data from request body",
+				"error":   err.Error(),
+			})
+			return
+		}
+
+		topic := Topic{
+			Name:        req.TopicName,
+			Subscribers: make(map[string]*Subscriber),
+		}
+
+		for _, sub := range req.Subscribers {
+			subscriber, ok := m.Topics[DefaultTopic].Subscribers[sub]
+			if ok {
+				subscriber.SubscribesTo[req.TopicName] = &topic
+				topic.Subscribers[sub] = subscriber
+			}
+		}
+
+		m.Topics[req.TopicName] = &topic
+
+		c.JSON(http.StatusOK, topic)
+	}
+}
+
 func HandlePublish(m *Messenger) func(*gin.Context) {
 	return func(c *gin.Context) {
 

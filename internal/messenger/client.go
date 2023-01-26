@@ -59,7 +59,9 @@ func (cl *Client) BroadcastDKGMessage(msg *dkg.SignedMessage) error {
 	}
 	ssvMsgBytes, _ := ssvMsg.Encode()
 
-	return cl.publish(DefaultTopic, ssvMsgBytes)
+	fmt.Printf("signer %d, requestID %s\n", msg.Signer, hex.EncodeToString(msg.Message.Identifier[:]))
+	requestID := hex.EncodeToString(msg.Message.Identifier[:])
+	return cl.publish(requestID, ssvMsgBytes)
 }
 
 func (cl *Client) RegisterOperatorNode(id, addr string) error {
@@ -97,7 +99,7 @@ func (cl *Client) RegisterOperatorNode(id, addr string) error {
 }
 
 func (cl *Client) publish(topicName string, data []byte) error {
-	resp, err := http.Post(fmt.Sprintf("%s/publish?topic_name=%s", cl.SrvAddr, DefaultTopic), "application/json", bytes.NewBuffer(data))
+	resp, err := http.Post(fmt.Sprintf("%s/publish?topic_name=%s", cl.SrvAddr, topicName), "application/json", bytes.NewBuffer(data))
 	if err != nil {
 		return err
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/RockX-SG/frost-dkg-demo/internal/messenger"
@@ -41,9 +42,23 @@ func main() {
 
 	r := gin.Default()
 	r.GET("/ping", ping.HandlePing)
+	r.GET("/topics", func(c *gin.Context) {
+		c.JSON(http.StatusOK, m.Topics)
+	})
+
+	r.GET("/topics/:topic_name", func(c *gin.Context) {
+		topic, exist := m.Topics[c.Param("topic_name")]
+		if !exist {
+			c.JSON(http.StatusNotFound, nil)
+			return
+		}
+
+		c.JSON(http.StatusOK, topic)
+	})
 
 	// node registration
 	r.POST("/register_node", messenger.HandleNodeRegistration(runner, m))
+	r.POST("/topics", messenger.HandleCreateTopic(m))
 
 	// setup api routes
 	r.POST("/publish", messenger.HandlePublish(m))

@@ -29,6 +29,7 @@ type Apihandler struct {
 }
 
 func New() *Apihandler {
+
 	var netTransport = &http.Transport{
 		Dial: (&net.Dialer{
 			Timeout: 5 * time.Second,
@@ -42,7 +43,8 @@ func New() *Apihandler {
 			Timeout:   10 * time.Second,
 			Transport: netTransport,
 		},
-		requests: make(map[string]*KeygenReq),
+		requests:          make(map[string]*KeygenReq),
+		resharingrequests: make(map[string]*ResharingReq),
 	}
 }
 
@@ -72,6 +74,14 @@ func (h *Apihandler) HandleKeygen(c *gin.Context) {
 	operators := []types.OperatorID{}
 	for operatorID, _ := range req.Operators {
 		operators = append(operators, operatorID)
+	}
+
+	if err := createTopic(hex.EncodeToString(requestID[:]), operators); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "failed to create new topic for this keygen req",
+			"error":   err.Error(),
+		})
+		return
 	}
 
 	for operatorID, nodeAddr := range req.Operators {
@@ -152,7 +162,7 @@ func (h *Apihandler) HandleResharing(c *gin.Context) {
 
 	vk, _ := hex.DecodeString(req.ValidatorPK)
 
-	ks := testingutils.TestingKeygenKeySet()
+	ks := testingutils.TestingResharingKeySet()
 	requestID := testingutils.GetRandRequestID()
 
 	operators := []types.OperatorID{}
@@ -166,6 +176,14 @@ func (h *Apihandler) HandleResharing(c *gin.Context) {
 	}
 
 	alloperators := append(operators, operatorsOld...)
+
+	if err := createTopic(hex.EncodeToString(requestID[:]), alloperators); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "failed to create new topic for this resharing req",
+			"error":   err.Error(),
+		})
+		return
+	}
 
 	for _, operatorID := range alloperators {
 
@@ -362,10 +380,10 @@ func (h *Apihandler) fetchDKGResults(requestID string) (*DKGResult, error) {
 
 	messengerAddr := os.Getenv("MESSENGER_SRV_ADDR")
 	if messengerAddr == "" {
-		messengerAddr = "0.0.0.0:3000"
+		messengerAddr = "http://0.0.0.0:3000"
 	}
 
-	resp, err := http.Get(fmt.Sprintf("http://%s/data/%s", messengerAddr, requestID))
+	resp, err := http.Get(fmt.Sprintf("%s/data/%s", messengerAddr, requestID))
 	if err != nil {
 		return nil, err
 	}
