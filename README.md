@@ -70,8 +70,38 @@ The API will return a request ID in the following format:
     "request_id": "59c971e3477e19b48fc467bb6e300d8eab34cf32ae7eba35"
 }
 ```
+
+### Resharing
+To trigger a resharing process with a threshold of t out of the 4 operator nodes, make a POST request to the /resharing endpoint with the following JSON payload:
+```
+curl --location --request POST 'http://0.0.0.0:8000/resharing' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "operators": {
+        "5": "http://host.docker.internal:8085",
+        "6": "http://host.docker.internal:8086",
+        "7": "http://host.docker.internal:8087",
+        "8": "http://host.docker.internal:8088"
+    },
+    "threshold": 3,
+    "validator_pk": "8eb0f05adc697cdcbdf8848f7f1e8c2277f4fc7b0efc97ceb87ce75286e4328db7259fc0c1b39ced0c594855a30d415c",
+    "operators_old": {
+        "1": "http://host.docker.internal:8081",
+        "2": "http://host.docker.internal:8082",
+        "3": "http://host.docker.internal:8083"
+    }
+}'
+```
+The API will return a request ID in the following format:
+
+```json
+{
+    "request_id": "59c971e3477e19b48fc467bb6e300d8eab34cf32ae7eba35"
+}
+```
+
 ### Viewing Results
-To view the results of a key generation process, use the request ID returned from the previous step and make a GET request to the /data/{request_id} endpoint:
+To view the results of a key generation process (or resharing), use the request ID returned from the previous step and make a GET request to the /data/{request_id} endpoint:
 ```
 curl --location --request GET 'http://0.0.0.0:8000/data/59c971e3477e19b48fc467bb6e300d8eab34cf32ae7eba35'
 ```
