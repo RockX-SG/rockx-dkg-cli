@@ -5,7 +5,9 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/hex"
+	"fmt"
 
+	"github.com/bloxapp/ssv-spec/dkg"
 	"github.com/bloxapp/ssv-spec/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -118,4 +120,15 @@ var ethAddressFromHex = func(str string) common.Address {
 	ret := common.Address{}
 	copy(ret[:], byts)
 	return ret
+}
+
+func hardCodedOperatorInfo(operatorID types.OperatorID) (*dkg.Operator, error) {
+	if ret, found := DKGOperators[operatorID]; found {
+		return &dkg.Operator{
+			OperatorID:       operatorID,
+			ETHAddress:       ret.ETHAddress,
+			EncryptionPubKey: &ret.EncryptionKey.PublicKey,
+		}, nil
+	}
+	return nil, fmt.Errorf("failed to find operator with id %d", operatorID)
 }

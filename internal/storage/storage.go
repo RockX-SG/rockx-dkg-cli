@@ -9,32 +9,65 @@ import (
 	"github.com/dgraph-io/badger/v3"
 )
 
+var (
+	Network = "prater"
+)
+
 type Storage struct {
-	db        *badger.DB
-	operators map[types.OperatorID]*dkg.Operator
+	db *badger.DB
 }
 
 func NewStorage(db *badger.DB) dkg.Storage {
-	operators := make(map[types.OperatorID]*dkg.Operator)
-	for operatorID, operator := range DKGOperators {
-		operators[operatorID] = &dkg.Operator{
-			OperatorID:       operatorID,
-			ETHAddress:       operator.ETHAddress,
-			EncryptionPubKey: &operator.EncryptionKey.PublicKey,
-		}
-	}
-
 	return &Storage{
-		db:        db,
-		operators: operators,
+		db: db,
 	}
 }
 
 func (s *Storage) GetDKGOperator(operatorID types.OperatorID) (bool, *dkg.Operator, error) {
-	if ret, found := s.operators[operatorID]; found {
-		return true, ret, nil
+
+	var (
+		val          []byte
+		requireFetch bool   = false
+		key          string = fmt.Sprintf("operator/%d", operatorID)
+	)
+
+	err := s.db.View(func(txn *badger.Txn) error {
+		item, err := txn.Get([]byte(key))
+
+		if err != nil {
+			return err
+		}
+
+		val, err = item.ValueCopy(nil)
+		return err
+	})
+	if err == badger.ErrKeyNotFound {
+		requireFetch = true
+	} else if err != nil {
+		return false, nil, err
 	}
-	return false, nil, nil
+
+	var operator = new(dkg.Operator)
+	if !requireFetch {
+		if err := json.Unmarshal(val, operator); err != nil {
+			return false, nil, err
+		}
+	} else {
+		operator, err = FetchOperatorByID(operatorID)
+		if err != nil {
+			return false, nil, err
+		}
+		value, err := json.Marshal(operator)
+		if err != nil {
+			return false, nil, fmt.Errorf("failed to marshal keygen output :: %s", err.Error())
+		}
+		if err = s.db.Update(func(txn *badger.Txn) error {
+			return txn.Set([]byte(key), value)
+		}); err != nil {
+			return false, nil, err
+		}
+	}
+	return true, operator, nil
 }
 
 func (s *Storage) SaveKeyGenOutput(output *dkg.KeyGenOutput) error {
