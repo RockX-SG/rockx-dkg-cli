@@ -33,11 +33,9 @@ func (s *Storage) GetDKGOperator(operatorID types.OperatorID) (bool, *dkg.Operat
 
 	err := s.db.View(func(txn *badger.Txn) error {
 		item, err := txn.Get([]byte(key))
-
 		if err != nil {
 			return err
 		}
-
 		val, err = item.ValueCopy(nil)
 		return err
 	})
