@@ -14,6 +14,8 @@ require (
 	github.com/gin-gonic/gin v1.8.2
 	github.com/herumi/bls-eth-go-binary v0.0.0-20220509081320-2d8ab06de53c
 	github.com/stretchr/testify v1.8.1
+	github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4 v1.3.0
+	golang.org/x/crypto v0.0.0-20220507011949-2cf3adece122
 )
 
 require (
@@ -60,7 +62,6 @@ require (
 	github.com/prysmaticlabs/go-bitfield v0.0.0-20210809151128-385d8c5e3fb7 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	go.opencensus.io v0.22.5 // indirect
-	golang.org/x/crypto v0.0.0-20220507011949-2cf3adece122 // indirect
 	golang.org/x/net v0.4.0 // indirect
 	golang.org/x/sys v0.3.0 // indirect
 	golang.org/x/text v0.5.0 // indirect

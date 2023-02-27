@@ -12,12 +12,16 @@ type AppParams struct {
 	OperatorID           types.OperatorID
 	HttpAddress          string
 	MessengerHttpAddress string
+	KeystoreFilePath     string
+	keystorePassword     string
 }
 
 func (params *AppParams) loadFromEnv() {
 	params.loadOperatorID()
 	params.loadHttpAddress()
 	params.loadMessengerHttpAddress()
+	params.loadKeystoreFilePath()
+	params.loadKeystorePassword()
 }
 
 func (params *AppParams) loadOperatorID() {
@@ -46,4 +50,16 @@ func (params *AppParams) loadMessengerHttpAddress() {
 		port = "3000"
 	}
 	params.MessengerHttpAddress = fmt.Sprintf("http://%s:%s", hostname, port)
+}
+
+func (params *AppParams) loadKeystoreFilePath() {
+	keystoreFilePath := os.Getenv("KEYSTORE_FILE_PATH")
+	if keystoreFilePath == "" {
+		keystoreFilePath = "keystore.json"
+	}
+	params.KeystoreFilePath = keystoreFilePath
+}
+
+func (params *AppParams) loadKeystorePassword() {
+	params.keystorePassword = os.Getenv("KEYSTORE_PASSWORD")
 }
