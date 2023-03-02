@@ -11,6 +11,7 @@ import (
 func main() {
 	h := clihandler.New()
 	app := &cli.App{
+		Name: "frost-dkg-cli",
 		Commands: []*cli.Command{
 			{
 				Name:    "keygen",
@@ -90,12 +91,32 @@ func main() {
 					},
 				},
 			},
-			// {
-			// 	Name:    "generate-deposit-data",
-			// 	Aliases: []string{"gdd"},
-			// 	Usage:   "generate deposit data in json format",
-			// 	Action:  h.HandleGetDepositData,
-			// },
+			{
+				Name:    "generate-deposit-data",
+				Aliases: []string{"gdd"},
+				Usage:   "generate deposit data in json format",
+				Action:  h.HandleGetDepositData,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "request-id",
+						Aliases:  []string{"2"},
+						Usage:    "request id for keygen/resharing",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:    "withdrawal",
+						Aliases: []string{"w"},
+						Usage:   "withdrawal credential",
+						Value:   "",
+					},
+					&cli.StringFlag{
+						Name:    "fork",
+						Aliases: []string{"f"},
+						Usage:   "fork version",
+						Value:   "",
+					},
+				},
+			},
 		},
 	}
 

@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/RockX-SG/frost-dkg-demo/internal/messenger"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv-spec/dkg"
 	"github.com/bloxapp/ssv-spec/types"
 	"github.com/bloxapp/ssv-spec/types/testingutils"
@@ -38,8 +39,6 @@ func GetRandRequestID() dkg.RequestID {
 
 type CliHandler struct {
 	client *http.Client
-	// requests          map[string]*KeygenReq
-	// resharingrequests map[string]*ResharingReq
 }
 
 func New() *CliHandler {
@@ -55,8 +54,6 @@ func New() *CliHandler {
 			Timeout:   10 * time.Second,
 			Transport: netTransport,
 		},
-		// requests:          make(map[string]*KeygenReq),
-		// resharingrequests: make(map[string]*ResharingReq),
 	}
 }
 
@@ -302,110 +299,77 @@ func WriteJSONToFile(results *DKGResult, filepath string) error {
 	return json.NewEncoder(file).Encode(results)
 }
 
-// func (h *CliHandler) HandleGetDataByOperatorID(c *cli.Context) error {
-// 	requestID := c.Param("request_id")
-// 	if requestID == "" {
-// 		c.JSON(http.StatusBadRequest, gin.H{
-// 			"message": "empty requestID in the http request",
-// 			"error":   "query parameter `request_id` not found in the request",
-// 		})
-// 		return
-// 	}
+type DepositDataJson struct {
+	PubKey                string      `json:"pubkey"`
+	WithdrawalCredentials string      `json:"withdrawal_credentials"`
+	Amount                phase0.Gwei `json:"amount"`
+	Signature             string      `json:"signature"`
+	DepositMessageRoot    string      `json:"deposit_message_root"`
+	DepositDataRoot       string      `json:"deposit_data_root"`
+	ForkVersion           string      `json:"fork_version"`
+	NetworkName           string      `json:"network_name"`
+	DepositCliVersion     string      `json:"deposit_cli_version"`
+}
 
-// 	operatorIDParam := c.Param("operator_id")
-// 	if operatorIDParam == "" {
-// 		c.JSON(http.StatusBadRequest, gin.H{
-// 			"message": "empty operatorID in the http request",
-// 			"error":   "query parameter `operator_id` not found in the request",
-// 		})
-// 		return
-// 	}
+func (h *CliHandler) HandleGetDepositData(c *cli.Context) error {
+	requestID := c.String("request-id")
+	if requestID == "" {
+		return fmt.Errorf("`request_id` not found")
+	}
 
-// 	operatorID, _ := strconv.Atoi(operatorIDParam)
+	results, err := h.fetchDKGResults(requestID)
+	if err != nil {
+		return err
+	}
 
-// 	results, err := h.fetchDKGResults(requestID)
-// 	if err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{
-// 			"message": "failed to fetch results for keygen request",
-// 			"error":   err.Error(),
-// 		})
-// 	}
+	validatorPK, _ := hex.DecodeString(results.Output[1].Data.ValidatorPubKey)
+	withdrawalCredentials, _ := hex.DecodeString(c.String("withdrawal"))
+	fork := types.NetworkFromString(c.String("fork")).ForkVersion()
+	amount := phase0.Gwei(types.MaxEffectiveBalanceInGwei)
 
-// 	c.JSON(http.StatusOK, results.Output[types.OperatorID(operatorID)])
-// }
+	_, depositData, err := types.GenerateETHDepositData(validatorPK, withdrawalCredentials, fork, types.DomainDeposit)
+	if err != nil {
+		return err
+	}
 
-// type DepositDataJson struct {
-// 	PubKey                string      `json:"pubkey"`
-// 	WithdrawalCredentials string      `json:"withdrawal_credentials"`
-// 	Amount                phase0.Gwei `json:"amount"`
-// 	Signature             string      `json:"signature"`
-// 	DepositMessageRoot    string      `json:"deposit_message_root"`
-// 	DepositDataRoot       string      `json:"deposit_data_root"`
-// 	ForkVersion           string      `json:"fork_version"`
-// 	NetworkName           string      `json:"network_name"`
-// 	DepositCliVersion     string      `json:"deposit_cli_version"`
-// }
+	depositMsg := &phase0.DepositMessage{
+		PublicKey:             depositData.PublicKey,
+		WithdrawalCredentials: withdrawalCredentials,
+		Amount:                amount,
+	}
+	depositMsgRoot, _ := depositMsg.HashTreeRoot()
 
-// func (h *CliHandler) HandleGetDepositData(c *cli.Context) error {
-// 	requestID := c.Param("request_id")
-// 	if requestID == "" {
-// 		c.JSON(http.StatusBadRequest, gin.H{
-// 			"message": "empty requestID in the http request",
-// 			"error":   "query parameter `request_id` not found in the request",
-// 		})
-// 		return
-// 	}
+	blsSigBytes, _ := hex.DecodeString(results.Output[1].Data.DepositDataSignature)
+	blsSig := phase0.BLSSignature{}
+	copy(blsSig[:], blsSigBytes)
+	depositData.Signature = blsSig
 
-// 	req, ok := h.requests[requestID]
-// 	if !ok {
-// 		c.AbortWithStatus(http.StatusNotFound)
-// 		return
-// 	}
-// 	results, err := h.fetchDKGResults(requestID)
-// 	if err != nil {
-// 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-// 		return
-// 	}
+	depositDataRoot, _ := depositData.HashTreeRoot()
 
-// 	validatorPK, _ := hex.DecodeString(results.Output[1].Data.ValidatorPubKey)
-// 	withdrawalCredentials, _ := hex.DecodeString(req.WithdrawalCredential)
-// 	fork := types.NetworkFromString(req.ForkVersion).ForkVersion()
-// 	amount := phase0.Gwei(types.MaxEffectiveBalanceInGwei)
+	response := DepositDataJson{
+		PubKey:                results.Output[1].Data.ValidatorPubKey,
+		WithdrawalCredentials: c.String("withdrawal"),
+		Amount:                amount,
+		Signature:             results.Output[1].Data.DepositDataSignature,
+		DepositMessageRoot:    hex.EncodeToString(depositMsgRoot[:]),
+		DepositDataRoot:       hex.EncodeToString(depositDataRoot[:]),
+		ForkVersion:           hex.EncodeToString(fork[:]),
+		DepositCliVersion:     "2.3.0",
+	}
 
-// 	_, depositData, err := types.GenerateETHDepositData(validatorPK, withdrawalCredentials, fork, types.DomainDeposit)
-// 	if err != nil {
-// 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-// 		return
-// 	}
+	filename := fmt.Sprintf("deposit-data_%d.json", time.Now().UTC().Unix())
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	if err := json.NewEncoder(file).Encode(response); err != nil {
+		return err
+	}
 
-// 	depositMsg := &phase0.DepositMessage{
-// 		PublicKey:             depositData.PublicKey,
-// 		WithdrawalCredentials: withdrawalCredentials,
-// 		Amount:                amount,
-// 	}
-// 	depositMsgRoot, _ := depositMsg.HashTreeRoot()
-
-// 	blsSigBytes, _ := hex.DecodeString(results.Output[1].Data.DepositDataSignature)
-// 	blsSig := phase0.BLSSignature{}
-// 	copy(blsSig[:], blsSigBytes)
-// 	depositData.Signature = blsSig
-
-// 	depositDataRoot, _ := depositData.HashTreeRoot()
-
-// 	response := DepositDataJson{
-// 		PubKey:                results.Output[1].Data.ValidatorPubKey,
-// 		WithdrawalCredentials: req.WithdrawalCredential,
-// 		Amount:                amount,
-// 		Signature:             results.Output[1].Data.DepositDataSignature,
-// 		DepositMessageRoot:    hex.EncodeToString(depositMsgRoot[:]),
-// 		DepositDataRoot:       hex.EncodeToString(depositDataRoot[:]),
-// 		ForkVersion:           hex.EncodeToString(fork[:]),
-// 		DepositCliVersion:     "2.3.0",
-// 	}
-
-// 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=deposit-data_%d.json", time.Now().UTC().Unix()))
-// 	c.JSON(http.StatusOK, []DepositDataJson{response})
-// }
+	fmt.Printf("writing deposit data json to file %s\n", filename)
+	return nil
+}
 
 func (h *CliHandler) fetchDKGResults(requestID string) (*DKGResult, error) {
 
