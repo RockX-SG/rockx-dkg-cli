@@ -82,7 +82,7 @@ func main() {
 }
 
 func setupDB() (*badger.DB, error) {
-	return badger.Open(badger.DefaultOptions("/tmp/frost-dkg-data"))
+	return badger.Open(badger.DefaultOptions("/frost-dkg-data"))
 }
 
 func thisOperator(operatorID uint32, storage dkg.Storage) *dkg.Operator {

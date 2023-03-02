@@ -1,2 +1,3 @@
 keys/
 cmd/generate_keystore
+dkg_results_*

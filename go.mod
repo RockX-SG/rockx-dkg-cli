@@ -2,7 +2,7 @@ module github.com/RockX-SG/frost-dkg-demo
 
 go 1.19
 
-replace github.com/bloxapp/ssv-spec v0.2.7 => github.com/RockX-SG/ssv-spec v0.1.4-0.20230206125125-0321b07ec73f
+replace github.com/bloxapp/ssv-spec v0.2.7 => github.com/RockX-SG/ssv-spec v0.1.5
 
 replace github.com/coinbase/kryptology => github.com/RockX-SG/kryptology v1.5.6-0.20221017030241-a65fc893311e
 
@@ -14,8 +14,8 @@ require (
 	github.com/gin-gonic/gin v1.8.2
 	github.com/herumi/bls-eth-go-binary v0.0.0-20220509081320-2d8ab06de53c
 	github.com/stretchr/testify v1.8.1
+	github.com/urfave/cli/v2 v2.3.0
 	github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4 v1.3.0
-	golang.org/x/crypto v0.0.0-20220507011949-2cf3adece122
 )
 
 require (
@@ -27,6 +27,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/coinbase/kryptology v1.8.0 // indirect
 	github.com/consensys/gnark-crypto v0.5.3 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	github.com/dgraph-io/ristretto v0.1.1 // indirect
@@ -60,8 +61,11 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prysmaticlabs/go-bitfield v0.0.0-20210809151128-385d8c5e3fb7 // indirect
+	github.com/russross/blackfriday/v2 v2.0.1 // indirect
+	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
 	go.opencensus.io v0.22.5 // indirect
+	golang.org/x/crypto v0.0.0-20220507011949-2cf3adece122 // indirect
 	golang.org/x/net v0.4.0 // indirect
 	golang.org/x/sys v0.3.0 // indirect
 	golang.org/x/text v0.5.0 // indirect
