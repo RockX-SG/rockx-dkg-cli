@@ -6,7 +6,7 @@ build:
 	go build -o $(GOBIN)/api  $(GOCMD)/api/main.go
 
 build_cli:
-	go build -o $(GOBIN)/cli  $(GOCMD)/cli/main.go
+	go build -o $(GOBIN)/rockx-dkg-cli  $(GOCMD)/cli/main.go
 
 build_messenger:
 	go build -o $(GOBIN)/messenger  $(GOCMD)/messenger/main.go

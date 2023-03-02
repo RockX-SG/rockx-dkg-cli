@@ -11,7 +11,8 @@ import (
 func main() {
 	h := clihandler.New()
 	app := &cli.App{
-		Name: "frost-dkg-cli",
+		Name:  "rockx-dkg-cli",
+		Usage: "A cli tool to run DKG for keygen and resharing and generate deposit data",
 		Commands: []*cli.Command{
 			{
 				Name:    "keygen",
@@ -32,13 +33,13 @@ func main() {
 						Value:   3,
 					},
 					&cli.StringFlag{
-						Name:    "withdrawal",
+						Name:    "withdrawal-credentials",
 						Aliases: []string{"w"},
-						Usage:   "withdrawal credential",
+						Usage:   "withdrawal credential value",
 						Value:   "",
 					},
 					&cli.StringFlag{
-						Name:    "fork",
+						Name:    "fork-version",
 						Aliases: []string{"f"},
 						Usage:   "fork version",
 						Value:   "",
@@ -59,7 +60,7 @@ func main() {
 					},
 					&cli.StringSliceFlag{
 						Name:     "old-operator",
-						Aliases:  []string{"p"},
+						Aliases:  []string{"oo"},
 						Usage:    "old operator key-value pair",
 						Required: true,
 					},
@@ -78,14 +79,14 @@ func main() {
 				},
 			},
 			{
-				Name:    "get-results",
+				Name:    "get-dkg-results",
 				Aliases: []string{"gr"},
-				Usage:   "get results of keygen/resharing request",
+				Usage:   "get validator-pk and key shares of all operators",
 				Action:  h.HandleGetData,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:     "request-id",
-						Aliases:  []string{"2"},
+						Aliases:  []string{"req"},
 						Usage:    "request id for keygen/resharing",
 						Required: true,
 					},
@@ -99,18 +100,18 @@ func main() {
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:     "request-id",
-						Aliases:  []string{"2"},
+						Aliases:  []string{"req"},
 						Usage:    "request id for keygen/resharing",
 						Required: true,
 					},
 					&cli.StringFlag{
-						Name:    "withdrawal",
+						Name:    "withdrawal-credentials",
 						Aliases: []string{"w"},
 						Usage:   "withdrawal credential",
 						Value:   "",
 					},
 					&cli.StringFlag{
-						Name:    "fork",
+						Name:    "fork-version",
 						Aliases: []string{"f"},
 						Usage:   "fork version",
 						Value:   "",
