@@ -24,21 +24,11 @@ test:
 	go test -v -cover ./...  -coverprofile .testCoverage.txt
 
 clean:
-	rm $(GOBIN)/frostdkgdemo
+	rm deposit-data_*
+	rm dkg_results_*
+	rm $(GOBIN)/*
 	rm *.log
 
 all: test build
 
 .PHONY: all test clean build
-#  --operator 1="http://0.0.0.0:8081" --operator 2="http://0.0.0.0:8082" --operator 3="http://0.0.0.0:8083" --operator 4="http://0.0.0.0:8084" --threshold 3 --withdrawal "010000000000000000000000535953b5a6040074948cf185eaa7d2abbd66808f" --fork "prater"
-# {
-#     "operators": {
-#         "1": "http://host.docker.internal:8081",
-#         "2": "http://host.docker.internal:8082",
-#         "3": "http://host.docker.internal:8083",
-#         "4": "http://host.docker.internal:8084"
-#     },
-#     "threshold": 3,
-#     "withdrawal_credentials": "010000000000000000000000535953b5a6040074948cf185eaa7d2abbd66808f",
-#     "fork_version": "prater"
-# }
