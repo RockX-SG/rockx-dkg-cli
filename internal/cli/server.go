@@ -68,8 +68,8 @@ func (h *CliHandler) HandleKeygen(c *cli.Context) error {
 	req := KeygenReq{
 		Operators:            make(map[types.OperatorID]string),
 		Threshold:            c.Int("threshold"),
-		WithdrawalCredential: c.String("withdrawal"),
-		ForkVersion:          c.String("fork"),
+		WithdrawalCredential: c.String("withdrawal-credentials"),
+		ForkVersion:          c.String("fork-version"),
 	}
 	operatorkv := c.StringSlice("operator")
 	for _, op := range operatorkv {
@@ -319,8 +319,8 @@ func (h *CliHandler) HandleGetDepositData(c *cli.Context) error {
 	}
 
 	validatorPK, _ := hex.DecodeString(results.Output[1].Data.ValidatorPubKey)
-	withdrawalCredentials, _ := hex.DecodeString(c.String("withdrawal"))
-	fork := types.NetworkFromString(c.String("fork")).ForkVersion()
+	withdrawalCredentials, _ := hex.DecodeString(c.String("withdrawal-credentials"))
+	fork := types.NetworkFromString(c.String("fork-version")).ForkVersion()
 	amount := phase0.Gwei(types.MaxEffectiveBalanceInGwei)
 
 	_, depositData, err := types.GenerateETHDepositData(validatorPK, withdrawalCredentials, fork, types.DomainDeposit)
@@ -344,7 +344,7 @@ func (h *CliHandler) HandleGetDepositData(c *cli.Context) error {
 
 	response := DepositDataJson{
 		PubKey:                results.Output[1].Data.ValidatorPubKey,
-		WithdrawalCredentials: c.String("withdrawal"),
+		WithdrawalCredentials: c.String("withdrawal-credentials"),
 		Amount:                amount,
 		Signature:             results.Output[1].Data.DepositDataSignature,
 		DepositMessageRoot:    hex.EncodeToString(depositMsgRoot[:]),
