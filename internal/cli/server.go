@@ -190,14 +190,10 @@ func (h *CliHandler) HandleResharing(c *cli.Context) error {
 		req.OperatorsOld[types.OperatorID(opID)] = pair[1]
 	}
 
-	fmt.Printf("vk=%+v\n", req.ValidatorPK)
-
 	vk, err := hex.DecodeString(req.ValidatorPK)
 	if err != nil {
 		return err
 	}
-
-	fmt.Printf("req=%+v\n", req)
 
 	ks := testingutils.TestingResharingKeySet()
 	requestID := GetRandRequestID()
