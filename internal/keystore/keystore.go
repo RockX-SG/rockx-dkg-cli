@@ -1,5 +1,14 @@
 package keystore
 
+import (
+	"crypto/ecdsa"
+	"encoding/json"
+	"os"
+
+	"github.com/ethereum/go-ethereum/crypto"
+	keystorev4 "github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4"
+)
+
 type KeyStoreV4 struct {
 	Crypto      CryptoInfo `json:"crypto"`
 	Description string     `json:"description"`
@@ -43,4 +52,31 @@ type CipherInfo struct {
 
 type CipherParams struct {
 	IV string `json:"iv"`
+}
+
+func (data *KeyStoreV4) DecodeFromFile(filepath string) error {
+	f, err := os.Open(filepath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return json.NewDecoder(f).Decode(&data)
+}
+
+func (data *KeyStoreV4) ToECDSAPrivateKey(password string) (*ecdsa.PrivateKey, error) {
+	key, err := keystorev4.New(keystorev4.WithCipher("scrypt")).
+		Decrypt(
+			map[string]interface{}{
+				"checksum": data.Crypto.Checksum,
+				"cipher":   data.Crypto.Cipher,
+				"kdf":      data.Crypto.KDF,
+			},
+			password,
+		)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return crypto.ToECDSA(key)
 }

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"crypto/ecdsa"
-	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -13,8 +11,6 @@ import (
 	"github.com/RockX-SG/frost-dkg-demo/internal/node"
 	"github.com/RockX-SG/frost-dkg-demo/internal/ping"
 	store "github.com/RockX-SG/frost-dkg-demo/internal/storage"
-	"github.com/ethereum/go-ethereum/crypto"
-	keystorev4 "github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4"
 
 	"github.com/bloxapp/ssv-spec/dkg"
 	"github.com/bloxapp/ssv-spec/dkg/frost"
@@ -38,13 +34,12 @@ func main() {
 	}
 	defer db.Close()
 
-	f, err := os.Open(params.KeystoreFilePath)
-	if err != nil {
+	ks := &keystore.KeyStoreV4{}
+	if err := ks.DecodeFromFile(params.KeystoreFilePath); err != nil {
 		panic(err)
 	}
-	defer f.Close()
 
-	sk, err := SKFromFile(params.KeystoreFilePath, params.keystorePassword)
+	sk, err := ks.ToECDSAPrivateKey(params.keystorePassword)
 	if err != nil {
 		panic(err)
 	}
@@ -94,30 +89,4 @@ func thisOperator(operatorID uint32, storage dkg.Storage) *dkg.Operator {
 		panic(fmt.Sprintf("operator with ID %d doesn't exist", operatorID))
 	}
 	return operator
-}
-
-func SKFromFile(filepath, password string) (*ecdsa.PrivateKey, error) {
-	f, err := os.Open(filepath)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-
-	e := keystorev4.New(keystorev4.WithCipher("scrypt"))
-
-	data := keystore.KeyStoreV4{}
-	if err := json.NewDecoder(f).Decode(&data); err != nil {
-		panic(err)
-	}
-
-	data2 := make(map[string]interface{})
-	data2["checksum"] = data.Crypto.Checksum
-	data2["cipher"] = data.Crypto.Cipher
-	data2["kdf"] = data.Crypto.KDF
-
-	key, err := e.Decrypt(data2, password)
-	if err != nil {
-		panic(err)
-	}
-	return crypto.ToECDSA(key)
 }
