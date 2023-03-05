@@ -8,7 +8,6 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"strconv"
@@ -29,20 +28,8 @@ type Apihandler struct {
 }
 
 func New() *Apihandler {
-
-	var netTransport = &http.Transport{
-		Dial: (&net.Dialer{
-			Timeout: 5 * time.Second,
-		}).Dial,
-		TLSHandshakeTimeout: 5 * time.Second,
-		DisableKeepAlives:   true,
-	}
-
 	return &Apihandler{
-		client: &http.Client{
-			Timeout:   10 * time.Second,
-			Transport: netTransport,
-		},
+		client:            http.DefaultClient,
 		requests:          make(map[string]*KeygenReq),
 		resharingrequests: make(map[string]*ResharingReq),
 	}
@@ -76,7 +63,8 @@ func (h *Apihandler) HandleKeygen(c *gin.Context) {
 		operators = append(operators, operatorID)
 	}
 
-	if err := createTopic(hex.EncodeToString(requestID[:]), operators); err != nil {
+	messengerClient := messenger.NewMessengerClient(messenger.MessengerAddrFromEnv())
+	if err := messengerClient.CreateTopic(hex.EncodeToString(requestID[:]), operators); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "failed to create new topic for this keygen req",
 			"error":   err.Error(),
@@ -177,7 +165,8 @@ func (h *Apihandler) HandleResharing(c *gin.Context) {
 
 	alloperators := append(operators, operatorsOld...)
 
-	if err := createTopic(hex.EncodeToString(requestID[:]), alloperators); err != nil {
+	messengerClient := messenger.NewMessengerClient(messenger.MessengerAddrFromEnv())
+	if err := messengerClient.CreateTopic(hex.EncodeToString(requestID[:]), alloperators); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "failed to create new topic for this resharing req",
 			"error":   err.Error(),

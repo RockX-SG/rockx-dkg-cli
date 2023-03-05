@@ -96,7 +96,8 @@ func (h *CliHandler) HandleKeygen(c *cli.Context) error {
 		operators = append(operators, operatorID)
 	}
 
-	if err := createTopic(hex.EncodeToString(requestID[:]), operators); err != nil {
+	messengerClient := messenger.NewMessengerClient(messenger.MessengerAddrFromEnv())
+	if err := messengerClient.CreateTopic(hex.EncodeToString(requestID[:]), operators); err != nil {
 		return err
 	}
 
@@ -210,7 +211,8 @@ func (h *CliHandler) HandleResharing(c *cli.Context) error {
 
 	alloperators := append(operators, operatorsOld...)
 
-	if err := createTopic(hex.EncodeToString(requestID[:]), alloperators); err != nil {
+	messengerClient := messenger.NewMessengerClient(messenger.MessengerAddrFromEnv())
+	if err := messengerClient.CreateTopic(hex.EncodeToString(requestID[:]), alloperators); err != nil {
 		return err
 	}
 
