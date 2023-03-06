@@ -47,14 +47,14 @@ docker-compose up -d
 
 To install the cli tool, run the following command:
 ```shell
-~ make build
+make build
 ```
 
 The cli binary can be found at `./build/bin` as `rockx-dkg-cli`. You can add it to you PATH to access it directly buy running
 
 ```
-~ cd ./build/bin
-~ export PATH=$PATH:`pwd`
+cd ./build/bin
+export PATH=$PATH:`pwd`
 ```
 
 You can check all the available command by just typing `rockx-dkg-cli`
@@ -87,7 +87,7 @@ The `keygen` command is used to generate a new set of key shares using the distr
 
 ##### Example:
 ```
-~ rockx-dkg-cli keygen --operator 1="http://0.0.0.0:8081" --operator 2="http://0.0.0.0:8082" --operator 3="http://0.0.0.0:8083" --operator 4="http://0.0.0.0:8084" --threshold 3 --withdrawal-credentials "010000000000000000000000535953b5a6040074948cf185eaa7d2abbd66808f" --fork-version "prater"
+rockx-dkg-cli keygen --operator 1="http://0.0.0.0:8081" --operator 2="http://0.0.0.0:8082" --operator 3="http://0.0.0.0:8083" --operator 4="http://0.0.0.0:8084" --threshold 3 --withdrawal-credentials "010000000000000000000000535953b5a6040074948cf185eaa7d2abbd66808f" --fork-version "prater"
 ```
 
 The CLI will return a request ID in the following format:
@@ -106,7 +106,7 @@ The `resharing` command is used to reshare an existing validator public key from
 
 ##### Example:
 ```
-~ rockx-dkg-cli resharing --operator 5="http://0.0.0.0:8085"  --operator 6="http://0.0.0.0:8086"  --operator 7="http://0.0.0.0:8087"  --operator 8="http://0.0.0.0:8088" --old-operator 1="http://0.0.0.0:8081" --old-operator 2="http://0.0.0.0:8082" --old-operator 3="http://0.0.0.0:8083"  --threshold 3 --validator-pk adf8b634f1c2bb64fe61af95b208a2a7bdac0d2d15963f83463bdb85c7e726250bfa3a390bf01edfc0700d61f4bee579
+rockx-dkg-cli resharing --operator 5="http://0.0.0.0:8085"  --operator 6="http://0.0.0.0:8086"  --operator 7="http://0.0.0.0:8087"  --operator 8="http://0.0.0.0:8088" --old-operator 1="http://0.0.0.0:8081" --old-operator 2="http://0.0.0.0:8082" --old-operator 3="http://0.0.0.0:8083"  --threshold 3 --validator-pk adf8b634f1c2bb64fe61af95b208a2a7bdac0d2d15963f83463bdb85c7e726250bfa3a390bf01edfc0700d61f4bee579
 ```
 The CLI will return a request ID in the following format:
 
@@ -122,7 +122,7 @@ To view the results of a key generation process (or resharing), use the request 
 
 ##### Example:
 ```
-~rockx-dkg-cli get-dkg-results --request-id c9e8c174060ee45bf86aaea3e409d8ee48a8fcb3d008fd18
+rockx-dkg-cli get-dkg-results --request-id c9e8c174060ee45bf86aaea3e409d8ee48a8fcb3d008fd18
 ```
 This will write the results of the key generation/resharing process with the given request ID to a file of format `dkg_results_<request_id>_<timestamp>.json`
 
@@ -140,7 +140,7 @@ To generate deposit data run the command `generate-deposit-data` from the cli. I
 
 #### Example:
 ```
-~ rockx-dkg-cli generate-deposit-data --withdrawal-credentials "010000000000000000000000535953b5a6040074948cf185eaa7d2abbd66808f" --fork-version "prater" --request-id a6e2cb702e163a328c0ab80b29a4d444feb3ac948088462f
+rockx-dkg-cli generate-deposit-data --withdrawal-credentials "010000000000000000000000535953b5a6040074948cf185eaa7d2abbd66808f" --fork-version "prater" --request-id a6e2cb702e163a328c0ab80b29a4d444feb3ac948088462f
 ```
 
 The generated file can be verified at https://goerli.launchpad.ethereum.org/en/overview
@@ -157,6 +157,6 @@ make build_verify
 ./build/bin/verify prater 87d7a269ec845bd363fd2c6b2e8e61d5314725d5456ca5c4c8397d33d3052bb2c641e50ee78939f9deed429dff4f48ad 8ea5d0dddec9aa797fbb624c5732ea47fea89cc63adb391e15892e7b849a86edc93de80bace9cc06d85243d92c718fbb0c2cef9a8f5dd61f7af534ff1c211966fa581605410ea5bc13848a52626a612d690d5f8aabc80c0b619be2ef785ed88d 010000000000000000000000535953b5a6040074948cf185eaa7d2abbd66808f
 
 # Output
-# ~ signature verification succeeded
+# signature verification succeeded
 ```
 
