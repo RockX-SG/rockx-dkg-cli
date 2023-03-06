@@ -37,7 +37,7 @@ func main() {
 
 	messengerAddr := os.Getenv("MESSENGER_ADDR")
 	if messengerAddr == "" {
-		messengerAddr = "http://0.0.0.0:3000"
+		messengerAddr = "0.0.0.0:3000"
 	}
 
 	r := gin.Default()
