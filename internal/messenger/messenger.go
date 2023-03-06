@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -144,4 +145,12 @@ func (s *Subscriber) ProcessOutgoingMessageWorker(ctx *context.Context) {
 		}
 		resp.Body.Close()
 	}
+}
+
+func MessengerAddrFromEnv() string {
+	messengerAddr := os.Getenv("MESSENGER_SRV_ADDR")
+	if messengerAddr == "" {
+		messengerAddr = "http://0.0.0.0:3000"
+	}
+	return messengerAddr
 }

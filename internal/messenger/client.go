@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/bloxapp/ssv-spec/dkg"
 	"github.com/bloxapp/ssv-spec/types"
@@ -48,19 +49,18 @@ func (cl *Client) StreamDKGOutput(output map[types.OperatorID]*dkg.SignedOutput)
 }
 
 func (cl *Client) BroadcastDKGMessage(msg *dkg.SignedMessage) error {
+	requestID := hex.EncodeToString(msg.Message.Identifier[:])
+
 	msgBytes, err := msg.Encode()
 	if err != nil {
 		return err
 	}
-
 	ssvMsg := types.SSVMessage{
 		MsgType: types.DKGMsgType,
 		Data:    msgBytes,
 	}
 	ssvMsgBytes, _ := ssvMsg.Encode()
 
-	fmt.Printf("signer %d, requestID %s\n", msg.Signer, hex.EncodeToString(msg.Message.Identifier[:]))
-	requestID := hex.EncodeToString(msg.Message.Identifier[:])
 	return cl.publish(requestID, ssvMsgBytes)
 }
 
@@ -120,6 +120,28 @@ func (cl *Client) stream(urlparam string, requestID string, data []byte) error {
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("failed to call stream %s request to messenger", urlparam)
+	}
+	return nil
+}
+
+func (cl *Client) CreateTopic(requestID string, l []types.OperatorID) error {
+	topic := CreateTopicReq{
+		TopicName:   requestID,
+		Subscribers: make([]string, 0),
+	}
+	for _, operatorID := range l {
+		topic.Subscribers = append(topic.Subscribers, strconv.Itoa(int(operatorID)))
+	}
+	data, _ := json.Marshal(topic)
+
+	resp, err := http.Post(fmt.Sprintf("%s/topics", cl.SrvAddr), "application/json", bytes.NewBuffer(data))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to call createTopic on messenger")
 	}
 	return nil
 }

@@ -1,14 +1,5 @@
 version: "3.7"
 services: 
-  api:
-    build:
-      context: ./
-      dockerfile: build/docker/api/Dockerfile
-    command: ./api
-    env_file: env/api.env
-    restart: on-failure
-    ports: 
-      - 8000:8000
   messenger:
     build:
       context: ./
