@@ -1,6 +1,7 @@
 package node
 
 import (
+	"encoding/hex"
 	"io"
 	"log"
 	"net/http"
@@ -46,5 +47,18 @@ func HandleConsume(node *dkg.Node) func(*gin.Context) {
 			"message": "processed message successfully",
 			"error":   nil,
 		})
+	}
+}
+
+func HandleGetDKGResults(node *dkg.Node) func(*gin.Context) {
+	return func(c *gin.Context) {
+		vk := c.Param("vk")
+		vkByte, _ := hex.DecodeString(vk)
+		output, err := node.GetConfig().GetStorage().GetKeyGenOutput(vkByte)
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+		c.JSON(http.StatusOK, output)
 	}
 }
