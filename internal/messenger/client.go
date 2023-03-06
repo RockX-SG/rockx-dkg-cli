@@ -49,19 +49,18 @@ func (cl *Client) StreamDKGOutput(output map[types.OperatorID]*dkg.SignedOutput)
 }
 
 func (cl *Client) BroadcastDKGMessage(msg *dkg.SignedMessage) error {
+	requestID := hex.EncodeToString(msg.Message.Identifier[:])
+
 	msgBytes, err := msg.Encode()
 	if err != nil {
 		return err
 	}
-
 	ssvMsg := types.SSVMessage{
 		MsgType: types.DKGMsgType,
 		Data:    msgBytes,
 	}
 	ssvMsgBytes, _ := ssvMsg.Encode()
 
-	fmt.Printf("signer %d, requestID %s\n", msg.Signer, hex.EncodeToString(msg.Message.Identifier[:]))
-	requestID := hex.EncodeToString(msg.Message.Identifier[:])
 	return cl.publish(requestID, ssvMsgBytes)
 }
 

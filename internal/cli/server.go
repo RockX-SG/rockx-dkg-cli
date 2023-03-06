@@ -1,30 +1,25 @@
 package cli
 
 import (
-	"bytes"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"math/big"
-	"net"
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/RockX-SG/frost-dkg-demo/internal/messenger"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv-spec/dkg"
 	"github.com/bloxapp/ssv-spec/types"
-	"github.com/bloxapp/ssv-spec/types/testingutils"
 	"github.com/urfave/cli/v2"
 )
 
-func GetRandRequestID() dkg.RequestID {
+func getRandRequestID() dkg.RequestID {
 	requestID := dkg.RequestID{}
 	for i := range requestID {
 		rndInt, _ := rand.Int(rand.Reader, big.NewInt(255))
@@ -42,234 +37,9 @@ type CliHandler struct {
 }
 
 func New() *CliHandler {
-	var netTransport = &http.Transport{
-		Dial: (&net.Dialer{
-			Timeout: 5 * time.Second,
-		}).Dial,
-		TLSHandshakeTimeout: 5 * time.Second,
-		DisableKeepAlives:   true,
-	}
 	return &CliHandler{
-		client: &http.Client{
-			Timeout:   10 * time.Second,
-			Transport: netTransport,
-		},
+		client: http.DefaultClient,
 	}
-}
-
-type KeygenReq struct {
-	Operators            map[types.OperatorID]string `json:"operators"`
-	Threshold            int                         `json:"threshold"`
-	WithdrawalCredential string                      `json:"withdrawal_credentials"`
-	ForkVersion          string                      `json:"fork_version"`
-}
-
-func (h *CliHandler) HandleKeygen(c *cli.Context) error {
-	req := KeygenReq{
-		Operators:            make(map[types.OperatorID]string),
-		Threshold:            c.Int("threshold"),
-		WithdrawalCredential: c.String("withdrawal-credentials"),
-		ForkVersion:          c.String("fork-version"),
-	}
-	operatorkv := c.StringSlice("operator")
-	for _, op := range operatorkv {
-		op = strings.Trim(op, " ")
-		pair := strings.Split(op, "=")
-		if len(pair) != 2 {
-			return fmt.Errorf("operator %s is not in the form of key=value", op)
-		}
-		opID, err := strconv.Atoi(pair[0])
-		if err != nil {
-			return err
-		}
-		req.Operators[types.OperatorID(opID)] = pair[1]
-	}
-
-	withdrawalCred, _ := hex.DecodeString(req.WithdrawalCredential)
-	forkVersion := types.NetworkFromString(req.ForkVersion).ForkVersion()
-
-	ks := testingutils.TestingKeygenKeySet()
-	requestID := GetRandRequestID()
-
-	operators := []types.OperatorID{}
-	for operatorID, _ := range req.Operators {
-		operators = append(operators, operatorID)
-	}
-
-	messengerClient := messenger.NewMessengerClient(messenger.MessengerAddrFromEnv())
-	if err := messengerClient.CreateTopic(hex.EncodeToString(requestID[:]), operators); err != nil {
-		return err
-	}
-
-	init := testingutils.InitMessageData(
-		operators,
-		uint16(req.Threshold),
-		withdrawalCred,
-		forkVersion,
-	)
-	initBytes, _ := init.Encode()
-
-	signedInitMsg := testingutils.SignDKGMsg(ks.DKGOperators[1].SK, 1, &dkg.Message{
-		MsgType:    dkg.InitMsgType,
-		Identifier: requestID,
-		Data:       initBytes,
-	})
-	signedInitMsgBytes, _ := signedInitMsg.Encode()
-
-	ssvMsg := &types.SSVMessage{
-		MsgType: types.DKGMsgType,
-		Data:    signedInitMsgBytes,
-	}
-	ssvMsgBytes, err := ssvMsg.Encode()
-	if err != nil {
-		return err
-	}
-
-	for operatorID, nodeAddr := range req.Operators {
-		url := fmt.Sprintf("%s/consume", nodeAddr)
-		req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(ssvMsgBytes))
-		if err != nil {
-			log.Fatal(err)
-		}
-		req.Header.Add("Content-Type", "application/json")
-
-		resp, err := h.client.Do(req)
-		if err != nil {
-			panic(err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			return fmt.Errorf("failed to send init message to the operator %d", operatorID)
-		}
-	}
-
-	fmt.Println(hex.EncodeToString(requestID[:]))
-	return nil
-}
-
-type ResharingReq struct {
-	Operators    map[types.OperatorID]string `json:"operators"`
-	Threshold    int                         `json:"threshold"`
-	ValidatorPK  string                      `json:"validator_pk"`
-	OperatorsOld map[types.OperatorID]string `json:"operators_old"`
-}
-
-func (h *CliHandler) HandleResharing(c *cli.Context) error {
-	req := ResharingReq{
-		Operators:    make(map[types.OperatorID]string),
-		OperatorsOld: make(map[types.OperatorID]string),
-		Threshold:    c.Int("threshold"),
-		ValidatorPK:  c.String("validator-pk"),
-	}
-
-	operatorkv := c.StringSlice("operator")
-	for _, op := range operatorkv {
-		op = strings.Trim(op, " ")
-		pair := strings.Split(op, "=")
-		if len(pair) != 2 {
-			return fmt.Errorf("operator %s is not in the form of key=value", op)
-		}
-		opID, err := strconv.Atoi(pair[0])
-		if err != nil {
-			return err
-		}
-		req.Operators[types.OperatorID(opID)] = pair[1]
-	}
-
-	oldoperatorkv := c.StringSlice("old-operator")
-	for _, op := range oldoperatorkv {
-		op = strings.Trim(op, " ")
-		pair := strings.Split(op, "=")
-		if len(pair) != 2 {
-			return fmt.Errorf("operator %s is not in the form of key=value", op)
-		}
-		opID, err := strconv.Atoi(pair[0])
-		if err != nil {
-			return err
-		}
-		req.OperatorsOld[types.OperatorID(opID)] = pair[1]
-	}
-
-	vk, err := hex.DecodeString(req.ValidatorPK)
-	if err != nil {
-		return err
-	}
-
-	ks := testingutils.TestingResharingKeySet()
-	requestID := GetRandRequestID()
-
-	operators := []types.OperatorID{}
-	for operatorID, _ := range req.Operators {
-		operators = append(operators, operatorID)
-	}
-
-	operatorsOld := []types.OperatorID{}
-	for operatorID, _ := range req.OperatorsOld {
-		operatorsOld = append(operatorsOld, operatorID)
-	}
-
-	alloperators := append(operators, operatorsOld...)
-
-	messengerClient := messenger.NewMessengerClient(messenger.MessengerAddrFromEnv())
-	if err := messengerClient.CreateTopic(hex.EncodeToString(requestID[:]), alloperators); err != nil {
-		return err
-	}
-
-	reshare := testingutils.ReshareMessageData(
-		operators,
-		uint16(req.Threshold),
-		vk,
-		operatorsOld,
-	)
-	reshareBytes, _ := reshare.Encode()
-
-	reshareMsg := testingutils.SignDKGMsg(ks.DKGOperators[5].SK, 5, &dkg.Message{
-		MsgType:    dkg.ReshareMsgType,
-		Identifier: requestID,
-		Data:       reshareBytes,
-	})
-	byts, _ := reshareMsg.Encode()
-
-	msg := &types.SSVMessage{
-		MsgType: types.DKGMsgType,
-		Data:    byts,
-	}
-
-	msgBytes, err := msg.Encode()
-	if err != nil {
-		panic(err)
-	}
-
-	for _, operatorID := range alloperators {
-		var nodeAddr string
-		_, ok := req.Operators[operatorID]
-		if ok {
-			nodeAddr = req.Operators[operatorID]
-		} else {
-			nodeAddr = req.OperatorsOld[operatorID]
-		}
-
-		url := fmt.Sprintf("%s/consume", nodeAddr)
-		req, err := http.NewRequest(http.MethodPost, url, bytes.NewBuffer(msgBytes))
-		if err != nil {
-			log.Fatal(err)
-		}
-		req.Header.Add("Content-Type", "application/json")
-
-		resp, err := h.client.Do(req)
-		if err != nil {
-			panic(err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			return fmt.Errorf("failed to send reshare message with code %d to operator %d", resp.StatusCode, operatorID)
-		}
-	}
-
-	fmt.Println(hex.EncodeToString(requestID[:]))
-	return nil
 }
 
 func (h *CliHandler) HandleGetData(c *cli.Context) error {
