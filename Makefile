@@ -3,9 +3,6 @@ GOBIN = $(GOBASE)/build/bin
 GOCMD = $(GOBASE)/cmd
 
 build:
-	go build -o $(GOBIN)/api  $(GOCMD)/api/main.go
-
-build_cli:
 	go build -o $(GOBIN)/rockx-dkg-cli  $(GOCMD)/cli/main.go
 
 build_messenger:
