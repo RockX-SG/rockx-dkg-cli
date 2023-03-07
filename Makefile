@@ -19,9 +19,9 @@ release:
 	GOOS=linux GOARCH=amd64 go build -o $(GOBIN)/rockx-dkg-messenger  $(GOCMD)/messenger/main.go
 	GOOS=linux GOARCH=amd64 go build -o $(GOBIN)/rockx-dkg-node  $(GOCMD)/node/main.go $(GOCMD)/node/app_params.go
 	GOOS=linux GOARCH=amd64 go build -o $(GOBIN)/rockx-dkg-cli  $(GOCMD)/cli/main.go
-	tar -czf rockx-messenger.$(VERSION).linux.amd64.tar.gz $(GOBIN)/rockx-dkg-messenger
-	tar -czf rockx-node.$(VERSION).linux.amd64.tar.gz $(GOBIN)/rockx-dkg-node
-	tar -czf rockx-cli.$(VERSION).linux.amd64.tar.gz $(GOBIN)/rockx-dkg-cli
+	tar -czf release/$(VERSION)/rockx-dkg-messenger.$(VERSION).linux.amd64.tar.gz $(GOBIN)/rockx-dkg-messenger
+	tar -czf release/$(VERSION)/rockx-dkg-node.$(VERSION).linux.amd64.tar.gz $(GOBIN)/rockx-dkg-node
+	tar -czf release/$(VERSION)/rockx-dkg-cli.$(VERSION).linux.amd64.tar.gz $(GOBIN)/rockx-dkg-cli
 
 deps:
 	go mod download
