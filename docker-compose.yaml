@@ -20,6 +20,8 @@ services:
     restart: on-failure
     ports: 
       - 8081:8081
+    volumes:
+      - ./keys:/keys
   operator-2:
     build:
       context: ./
@@ -31,6 +33,8 @@ services:
     restart: on-failure
     ports: 
       - 8082:8082
+    volumes:
+      - ./keys:/keys
   operator-3:
     build:
       context: ./
@@ -42,6 +46,8 @@ services:
     restart: on-failure
     ports: 
       - 8083:8083
+    volumes:
+      - ./keys:/keys
   operator-4:
     build:
       context: ./
@@ -53,6 +59,8 @@ services:
     restart: on-failure
     ports: 
       - 8084:8084
+    volumes:
+      - ./keys:/keys
   operator-5:
     build:
       context: ./
@@ -64,6 +72,8 @@ services:
     restart: on-failure
     ports: 
       - 8085:8085
+    volumes:
+      - ./keys:/keys
   operator-6:
     build:
       context: ./
@@ -75,6 +85,8 @@ services:
     restart: on-failure
     ports: 
       - 8086:8086
+    volumes:
+      - ./keys:/keys
   operator-7:
     build:
       context: ./
@@ -86,6 +98,8 @@ services:
     restart: on-failure
     ports: 
       - 8087:8087
+    volumes:
+      - ./keys:/keys
   operator-8:
     build:
       context: ./
@@ -97,3 +111,5 @@ services:
     restart: on-failure
     ports: 
       - 8088:8088
+    volumes:
+      - ./keys:/keys
