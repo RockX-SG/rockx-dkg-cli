@@ -1,4 +1,5 @@
 keys/
+!keys/.keep
 cmd/generate_keystore
 dkg_results_*
 deposit-data_*

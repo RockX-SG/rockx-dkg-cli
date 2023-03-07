@@ -59,7 +59,7 @@ func main() {
 	dkgnode := dkg.NewNode(thisOperator(uint32(params.OperatorID), storage), config)
 
 	// register dkg operator node with the messenger
-	if err := network.RegisterOperatorNode(strconv.Itoa(int(params.OperatorID)), fmt.Sprintf("http://%s", os.Getenv("NODE_BROADCAST_ADDR"))); err != nil {
+	if err := network.RegisterOperatorNode(strconv.Itoa(int(params.OperatorID)), os.Getenv("NODE_BROADCAST_ADDR")); err != nil {
 		panic(err)
 	}
 

@@ -24,7 +24,7 @@ With DKG, instead of creating signing key and deposit data manually, you can:
 
 The process of creating keys and deposit data with DKG is different from without DKG, but they are compatible with each other. DKG gives users another option to generate keys and in some cases it may be required, but the existing way of generating keys will still work and no action is needed from the users.
 
-## Getting Started
+## Getting Started (for local dev)
 
 This repository has a set of services that demonstrate how to use frost DKG to generate a validator public key and shares that are split between operators using Shamir Secret Sharing.
 It includes:
@@ -37,6 +37,7 @@ It includes:
 1. Go 1.19
 2. Docker (20 or later)
 3. Docker Compose (1.29 or later)
+4. Keystore files for each dkg operator in `/keys` folder
 
 ### Installation
 This code repository contains a Docker Compose configuration file to set up and run all necessary services. To start these services, run the following command:

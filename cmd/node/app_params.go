@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 
@@ -41,15 +40,11 @@ func (params *AppParams) loadHttpAddress() {
 }
 
 func (params *AppParams) loadMessengerHttpAddress() {
-	hostname := os.Getenv("MESSENGER_SRV_ADDR")
-	if hostname == "" {
-		hostname = "http://0.0.0.0:3000"
+	srvaddr := os.Getenv("MESSENGER_SRV_ADDR")
+	if srvaddr == "" {
+		srvaddr = "http://0.0.0.0:3000"
 	}
-	port := os.Getenv("MESSENGER_SRV_ADDR_PORT")
-	if port == "" {
-		port = "3000"
-	}
-	params.MessengerHttpAddress = fmt.Sprintf("http://%s:%s", hostname, port)
+	params.MessengerHttpAddress = srvaddr
 }
 
 func (params *AppParams) loadKeystoreFilePath() {
