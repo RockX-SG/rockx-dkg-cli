@@ -2,6 +2,7 @@ package messenger
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -15,11 +16,17 @@ import (
 
 type Client struct {
 	SrvAddr string
+	client  *http.Client
 }
 
 func NewMessengerClient(srvAddr string) *Client {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
 	return &Client{
 		SrvAddr: srvAddr,
+		client:  &http.Client{Transport: tr},
 	}
 }
 
@@ -77,7 +84,7 @@ func (cl *Client) RegisterOperatorNode(id, addr string) error {
 		byts, _ := json.Marshal(sub)
 
 		url := fmt.Sprintf("%s/register_node?subscribes_to=%s", cl.SrvAddr, DefaultTopic)
-		resp, err := http.Post(url, "application/json", bytes.NewReader(byts))
+		resp, err := cl.client.Post(url, "application/json", bytes.NewReader(byts))
 		if err != nil {
 			err := fmt.Errorf("failed to make request to messenger")
 			log.Printf("Error: %s\n", err.Error())
@@ -102,7 +109,7 @@ func (cl *Client) RegisterOperatorNode(id, addr string) error {
 }
 
 func (cl *Client) publish(topicName string, data []byte) error {
-	resp, err := http.Post(fmt.Sprintf("%s/publish?topic_name=%s", cl.SrvAddr, topicName), "application/json", bytes.NewBuffer(data))
+	resp, err := cl.client.Post(fmt.Sprintf("%s/publish?topic_name=%s", cl.SrvAddr, topicName), "application/json", bytes.NewBuffer(data))
 	if err != nil {
 		return err
 	}
@@ -115,7 +122,7 @@ func (cl *Client) publish(topicName string, data []byte) error {
 }
 
 func (cl *Client) stream(urlparam string, requestID string, data []byte) error {
-	resp, err := http.Post(fmt.Sprintf("%s/stream/%s?request_id=%s", cl.SrvAddr, urlparam, requestID), "application/json", bytes.NewBuffer(data))
+	resp, err := cl.client.Post(fmt.Sprintf("%s/stream/%s?request_id=%s", cl.SrvAddr, urlparam, requestID), "application/json", bytes.NewBuffer(data))
 	if err != nil {
 		return err
 	}
@@ -137,7 +144,7 @@ func (cl *Client) CreateTopic(requestID string, l []types.OperatorID) error {
 	}
 	data, _ := json.Marshal(topic)
 
-	resp, err := http.Post(fmt.Sprintf("%s/topics", cl.SrvAddr), "application/json", bytes.NewBuffer(data))
+	resp, err := cl.client.Post(fmt.Sprintf("%s/topics", cl.SrvAddr), "application/json", bytes.NewBuffer(data))
 	if err != nil {
 		return err
 	}
