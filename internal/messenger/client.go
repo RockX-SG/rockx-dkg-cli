@@ -68,6 +68,7 @@ func (cl *Client) RegisterOperatorNode(id, addr string) error {
 	numtries := 3
 	try := 1
 
+	errors := make([]error, 0)
 	for ; try <= numtries; try++ {
 		sub := &Subscriber{
 			Name:    id,
@@ -80,6 +81,7 @@ func (cl *Client) RegisterOperatorNode(id, addr string) error {
 		if err != nil {
 			err := fmt.Errorf("failed to make request to messenger")
 			log.Printf("Error: %s\n", err.Error())
+			errors = append(errors, err)
 			continue
 		}
 		defer resp.Body.Close()
@@ -87,13 +89,14 @@ func (cl *Client) RegisterOperatorNode(id, addr string) error {
 		if resp.StatusCode != http.StatusOK {
 			err := fmt.Errorf("failed to register operator of ID %s with the messenger on %d try", sub.Name, try)
 			log.Printf("Error: %s\n", err.Error())
+			errors = append(errors, err)
 		} else {
 			break
 		}
 	}
 
 	if try > numtries {
-		return fmt.Errorf("failed to register this node even after %d tried", numtries)
+		return fmt.Errorf("failed to register this node even after %d tries with errors %+v", numtries, errors)
 	}
 	return nil
 }
