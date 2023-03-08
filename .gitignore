@@ -4,3 +4,4 @@ cmd/generate_keystore
 dkg_results_*
 deposit-data_*
 build/bin/*
+release/*
