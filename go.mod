@@ -13,6 +13,8 @@ require (
 	github.com/ethereum/go-ethereum v1.10.18
 	github.com/gin-gonic/gin v1.8.2
 	github.com/herumi/bls-eth-go-binary v0.0.0-20220509081320-2d8ab06de53c
+	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
+	github.com/sirupsen/logrus v1.6.0
 	github.com/stretchr/testify v1.8.1
 	github.com/urfave/cli/v2 v2.3.0
 	github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4 v1.3.0
@@ -50,6 +52,7 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.12.3 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.11 // indirect
+	github.com/konsorten/go-windows-terminal-sequences v1.0.3 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect

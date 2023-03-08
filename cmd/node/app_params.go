@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 
@@ -21,6 +22,16 @@ func (params *AppParams) loadFromEnv() {
 	params.loadMessengerHttpAddress()
 	params.loadKeystoreFilePath()
 	params.loadKeystorePassword()
+}
+
+func (params *AppParams) print() string {
+	return fmt.Sprintf(
+		"operatorID=%d http_addr=%s messenger_addr=%s keystore_filepath=%s",
+		params.OperatorID,
+		params.HttpAddress,
+		params.MessengerHttpAddress,
+		params.KeystoreFilePath,
+	)
 }
 
 func (params *AppParams) loadOperatorID() {

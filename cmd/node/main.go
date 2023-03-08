@@ -11,6 +11,8 @@ import (
 	"github.com/RockX-SG/frost-dkg-demo/internal/node"
 	"github.com/RockX-SG/frost-dkg-demo/internal/ping"
 	store "github.com/RockX-SG/frost-dkg-demo/internal/storage"
+	"github.com/rifflock/lfshook"
+	"github.com/sirupsen/logrus"
 
 	"github.com/bloxapp/ssv-spec/dkg"
 	"github.com/bloxapp/ssv-spec/dkg/frost"
@@ -24,8 +26,12 @@ func init() {
 }
 
 func main() {
+	log := setupLogger()
+
 	params := &AppParams{}
 	params.loadFromEnv()
+
+	log.Infof("app env: %s", params.print())
 
 	// set up db for storage
 	db, err := setupDB()
@@ -78,6 +84,30 @@ func main() {
 
 func setupDB() (*badger.DB, error) {
 	return badger.Open(badger.DefaultOptions("/frost-dkg-data"))
+}
+
+func setupLogger() *logrus.Logger {
+	// Create a new Logrus logger instance
+	logger := logrus.New()
+
+	// Set the log level to Info
+	logger.SetLevel(logrus.InfoLevel)
+
+	// Create a new LFS hook to write log messages to a file
+	logFilePath := "/var/log/dkg_node.log"
+	fileHook := lfshook.NewHook(lfshook.PathMap{
+		logrus.InfoLevel:  logFilePath,
+		logrus.WarnLevel:  logFilePath,
+		logrus.ErrorLevel: logFilePath,
+	}, &logrus.JSONFormatter{})
+
+	// Add the LFS hook to the logger
+	logger.AddHook(fileHook)
+
+	// Set the logger to not print to the console
+	logger.SetOutput(os.Stdout)
+
+	return logger
 }
 
 func thisOperator(operatorID uint32, storage dkg.Storage) *dkg.Operator {
