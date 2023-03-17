@@ -19,9 +19,9 @@ CMD      ["./node"]
 ```
 NODE_OPERATOR_ID=1
 NODE_ADDR=0.0.0.0:8080
-NODE_BROADCAST_ADDR=http://host.docker.internal:8080
-MESSENGER_SRV_ADDR=http://dkg-messager.rockx.com
-KEYSTORE_FILE_PATH=/keys/keystore-m_12381_3600_2_0_0-1677466776.json
+NODE_BROADCAST_ADDR=<public ip or public address>
+MESSENGER_SRV_ADDR=https://dkg-messenger.rockx.com
+KEYSTORE_FILE_PATH=/keys/<keystore file name>
 KEYSTORE_PASSWORD=password
 USE_HARDCODED_OPERATORS=false
 ```

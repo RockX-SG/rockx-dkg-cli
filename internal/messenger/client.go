@@ -24,6 +24,10 @@ func NewMessengerClient(srvAddr string) *Client {
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 
+	if srvAddr == "" {
+		srvAddr = "https://dkg-messenger.rockx.com"
+	}
+
 	return &Client{
 		SrvAddr: srvAddr,
 		client:  &http.Client{Transport: tr},
