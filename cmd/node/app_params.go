@@ -1,35 +1,35 @@
 package main
 
 import (
+	"crypto/ecdsa"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strconv"
 
 	"github.com/bloxapp/ssv-spec/types"
+	"github.com/ethereum/go-ethereum/accounts/keystore"
 )
 
 type AppParams struct {
-	OperatorID           types.OperatorID
-	HttpAddress          string
-	MessengerHttpAddress string
-	KeystoreFilePath     string
-	keystorePassword     string
+	OperatorID       types.OperatorID
+	HttpAddress      string
+	KeystoreFilePath string
+	keystorePassword string
 }
 
 func (params *AppParams) loadFromEnv() {
 	params.loadOperatorID()
 	params.loadHttpAddress()
-	params.loadMessengerHttpAddress()
 	params.loadKeystoreFilePath()
 	params.loadKeystorePassword()
 }
 
 func (params *AppParams) print() string {
 	return fmt.Sprintf(
-		"operatorID=%d http_addr=%s messenger_addr=%s keystore_filepath=%s",
+		"operatorID=%d http_addr=%s keystore_filepath=%s",
 		params.OperatorID,
 		params.HttpAddress,
-		params.MessengerHttpAddress,
 		params.KeystoreFilePath,
 	)
 }
@@ -50,14 +50,6 @@ func (params *AppParams) loadHttpAddress() {
 	params.HttpAddress = nodeAddr
 }
 
-func (params *AppParams) loadMessengerHttpAddress() {
-	srvaddr := os.Getenv("MESSENGER_SRV_ADDR")
-	if srvaddr == "" {
-		srvaddr = "http://0.0.0.0:3000"
-	}
-	params.MessengerHttpAddress = srvaddr
-}
-
 func (params *AppParams) loadKeystoreFilePath() {
 	keystoreFilePath := os.Getenv("KEYSTORE_FILE_PATH")
 	if keystoreFilePath == "" {
@@ -68,4 +60,16 @@ func (params *AppParams) loadKeystoreFilePath() {
 
 func (params *AppParams) loadKeystorePassword() {
 	params.keystorePassword = os.Getenv("KEYSTORE_PASSWORD")
+}
+
+func (params *AppParams) loadDecryptedPrivateKey() (*ecdsa.PrivateKey, error) {
+	keyJSON, err := ioutil.ReadFile(params.KeystoreFilePath)
+	if err != nil {
+		return nil, err
+	}
+	key, err := keystore.DecryptKey(keyJSON, params.keystorePassword)
+	if err != nil {
+		return nil, err
+	}
+	return key.PrivateKey, nil
 }

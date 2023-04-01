@@ -141,10 +141,7 @@ func (h *CliHandler) HandleGetDepositData(c *cli.Context) error {
 
 func (h *CliHandler) fetchDKGResults(requestID string) (*DKGResult, error) {
 
-	messengerAddr := os.Getenv("MESSENGER_SRV_ADDR")
-	if messengerAddr == "" {
-		messengerAddr = "http://0.0.0.0:3000"
-	}
+	messengerAddr := messenger.MessengerAddrFromEnv()
 
 	url := fmt.Sprintf("%s/data/%s", messengerAddr, requestID)
 	resp, err := http.Get(url)

@@ -88,7 +88,7 @@ The `keygen` command is used to generate a new set of key shares using the distr
 
 ##### Example:
 ```
-rockx-dkg-cli keygen --operator 1="http://0.0.0.0:8081" --operator 2="http://0.0.0.0:8082" --operator 3="http://0.0.0.0:8083" --operator 4="http://0.0.0.0:8084" --threshold 3 --withdrawal-credentials "010000000000000000000000535953b5a6040074948cf185eaa7d2abbd66808f" --fork-version "prater"
+rockx-dkg-cli keygen --operator 1="http://0.0.0.0:8081" --operator 2="http://0.0.0.0:8082" --operator 3="http://0.0.0.0:8083" --operator 4="http://0.0.0.0:8084" --threshold 3 --withdrawal-credentials "0100000000000000000000001d2f14d2dffee594b4093d42e4bc1b0ea55e8aa7" --fork-version "prater"
 ```
 
 The CLI will return a request ID in the following format:
@@ -141,7 +141,7 @@ To generate deposit data run the command `generate-deposit-data` from the cli. I
 
 #### Example:
 ```
-rockx-dkg-cli generate-deposit-data --withdrawal-credentials "010000000000000000000000535953b5a6040074948cf185eaa7d2abbd66808f" --fork-version "prater" --request-id a6e2cb702e163a328c0ab80b29a4d444feb3ac948088462f
+rockx-dkg-cli generate-deposit-data --withdrawal-credentials "0100000000000000000000001d2f14d2dffee594b4093d42e4bc1b0ea55e8aa7" --fork-version "prater" --request-id a6e2cb702e163a328c0ab80b29a4d444feb3ac948088462f
 ```
 
 The generated file can be verified at https://goerli.launchpad.ethereum.org/en/overview
@@ -155,7 +155,7 @@ make build_verify
 # Run verify tool
 # ./build/bin/verify <fork_version> <validator_public_key> <deposit_data_sig> <withdrawal credentials>
 
-./build/bin/verify prater 87d7a269ec845bd363fd2c6b2e8e61d5314725d5456ca5c4c8397d33d3052bb2c641e50ee78939f9deed429dff4f48ad 8ea5d0dddec9aa797fbb624c5732ea47fea89cc63adb391e15892e7b849a86edc93de80bace9cc06d85243d92c718fbb0c2cef9a8f5dd61f7af534ff1c211966fa581605410ea5bc13848a52626a612d690d5f8aabc80c0b619be2ef785ed88d 010000000000000000000000535953b5a6040074948cf185eaa7d2abbd66808f
+./build/bin/verify prater 87d7a269ec845bd363fd2c6b2e8e61d5314725d5456ca5c4c8397d33d3052bb2c641e50ee78939f9deed429dff4f48ad 8ea5d0dddec9aa797fbb624c5732ea47fea89cc63adb391e15892e7b849a86edc93de80bace9cc06d85243d92c718fbb0c2cef9a8f5dd61f7af534ff1c211966fa581605410ea5bc13848a52626a612d690d5f8aabc80c0b619be2ef785ed88d 0100000000000000000000001d2f14d2dffee594b4093d42e4bc1b0ea55e8aa7
 
 # Output
 # signature verification succeeded

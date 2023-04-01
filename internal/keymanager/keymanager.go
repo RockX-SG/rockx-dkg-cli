@@ -12,14 +12,14 @@ import (
 )
 
 type keyManager struct {
-	Domain     types.DomainType
-	OperatorSK *ecdsa.PrivateKey
+	Domain types.DomainType
+	sk     *ecdsa.PrivateKey
 }
 
-func NewKeyManager(domain types.DomainType, operatorSK *ecdsa.PrivateKey) types.DKGSigner {
+func NewKeyManager(domain types.DomainType, privateKey *ecdsa.PrivateKey) types.DKGSigner {
 	return &keyManager{
-		Domain:     domain,
-		OperatorSK: operatorSK,
+		Domain: domain,
+		sk:     privateKey,
 	}
 }
 
@@ -55,15 +55,7 @@ func (km *keyManager) SignDKGOutput(output types.Root, address common.Address) (
 	if err != nil {
 		return nil, err
 	}
-	sk := km.OperatorSK
-	if sk == nil {
-		return nil, errors.New("operator ecdsa private key is nil")
-	}
-	sig, err := crypto.Sign(root, sk)
-	if err != nil {
-		return nil, err
-	}
-	return sig, nil
+	return crypto.Sign(root, km.sk)
 }
 
 func (km *keyManager) SignRoot(data types.Root, sigType types.SignatureType, pk []byte) (types.Signature, error) {
