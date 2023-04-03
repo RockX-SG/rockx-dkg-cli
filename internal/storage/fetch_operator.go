@@ -22,12 +22,12 @@ func FetchOperatorByID(operatorID types.OperatorID) (*dkg.Operator, error) {
 		return hardCodedOperatorInfo(operatorID)
 	}
 
-	operator, err := getOperatorFromRegistryByID(operatorID)
+	operator, err := GetOperatorFromRegistryByID(operatorID)
 	if err != nil {
 		return nil, err
 	}
 
-	publicKey, err := parsePublicKeyFromBase64(operator.PublicKey)
+	publicKey, err := ParsePublicKeyFromBase64(operator.PublicKey)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ type operatorResponse struct {
 	PublicKey string `json:"public_key"`
 }
 
-func getOperatorFromRegistryByID(operatorID types.OperatorID) (*operatorResponse, error) {
+func GetOperatorFromRegistryByID(operatorID types.OperatorID) (*operatorResponse, error) {
 	var operator = new(operatorResponse)
 	respBody, err := getResponse(fmt.Sprintf("https://api.ssv.network/api/v3/prater/operators/%d", operatorID))
 	if err != nil {
@@ -73,7 +73,7 @@ func getResponse(url string) ([]byte, error) {
 	return io.ReadAll(resp.Body)
 }
 
-func parsePublicKeyFromBase64(base64Key string) (*rsa.PublicKey, error) {
+func ParsePublicKeyFromBase64(base64Key string) (*rsa.PublicKey, error) {
 	// Decode the Base64-encoded key
 	keyBytes, err := base64.StdEncoding.DecodeString(base64Key)
 	if err != nil {
