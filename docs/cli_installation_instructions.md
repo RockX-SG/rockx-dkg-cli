@@ -28,6 +28,11 @@ tar -xzvf rockx-dkg-cli.0.1.1.darwin.arm64.tar.gz
 cp ./rockx-dkg-cli /usr/local/bin
 ```
 
+4. Set messenger service address for the cli
+```
+export MESSENGER_SRV_ADDR=https://dkg-messenger.rockx.com
+```
+
 4. Perform DKG
 ```
 rockx-dkg-cli keygen \
