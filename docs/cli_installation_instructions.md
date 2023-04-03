@@ -22,14 +22,10 @@ wget https://github.com/RockX-SG/rockx-dkg-cli/releases/download/0.1.1/rockx-dkg
 tar -xzvf rockx-dkg-cli.0.1.1.darwin.arm64.tar.gz
 ```
 
-3. Move the file to your PATH
+3. Move the file to your PATH and Set messenger service address for the cli
 
 ```
 cp ./rockx-dkg-cli /usr/local/bin
-```
-
-4. Set messenger service address for the cli
-```
 export MESSENGER_SRV_ADDR=https://dkg-messenger.rockx.com
 ```
 
