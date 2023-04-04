@@ -94,7 +94,7 @@ func main() {
 			},
 			{
 				Name:    "get-keyshares",
-				Aliases: []string{"gr"},
+				Aliases: []string{"gks"},
 				Usage:   "get keyshares for registering the validator on ssv UI",
 				Action:  h.HandleGetKeyShares,
 				Flags: []cli.Flag{

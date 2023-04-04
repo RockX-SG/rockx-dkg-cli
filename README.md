@@ -76,6 +76,7 @@ COMMANDS:
    keygen, k                   start keygen process
    resharing, r                start resharing process
    get-dkg-results, gr         get validator-pk and key shares of all operators
+   get-keyshares, gr           get keyshares for registering the validator on ssv UI
    generate-deposit-data, gdd  generate deposit data in json format
    help, h                     Shows a list of commands or help for one command
 
@@ -135,6 +136,22 @@ This will write the results of the key generation/resharing process with the giv
 
 ```
 writing results to file: dkg_results_c9e8c174060ee45bf86aaea3e409d8ee48a8fcb3d008fd18_1678083260.json
+```
+
+### Generating Keyshares file
+To generate keyshares file to be uploaded to SSV V3 UI for registering validater, `get-keyshares` command is used
+
+##### Command Options
+--request-id: request id generated from calling keygen or resharing command
+
+##### Example:
+```
+rockx-dkg-cli get-keyshares --request-id c9e8c174060ee45bf86aaea3e409d8ee48a8fcb3d008fd18
+```
+This will write the results of the key generation/resharing process with the given request ID to a file of format `keyshares-<timestamp>.json`
+
+```
+writing keyshares to file: keyshares-1680588773.json
 ```
 
 ### Generate Deposit data
