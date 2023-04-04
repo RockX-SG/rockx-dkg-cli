@@ -286,14 +286,14 @@ func (results *DKGResult) toKeyShares() (*KeyShares, error) {
 	}
 
 	data := KeySharesData{
-		PublicKey: results.Output[types.OperatorID(operatorIds[0])].Data.ValidatorPubKey,
+		PublicKey: "0x" + results.Output[types.OperatorID(operatorIds[0])].Data.ValidatorPubKey,
 		Operators: operatorData,
 		Shares:    shares,
 	}
 
 	payload := KeySharesPayload{
 		Readable: ReadablePayload{
-			PublicKey:   results.Output[types.OperatorID(operatorIds[0])].Data.ValidatorPubKey,
+			PublicKey:   "0x" + results.Output[types.OperatorID(operatorIds[0])].Data.ValidatorPubKey,
 			OperatorIDs: operatorIds,
 			Shares:      sharesToBytes(data.Shares.PublicKeys, shares.EncryptedKeys),
 			Amount:      "Amount of SSV tokens to be deposited to your validator's cluster balance (mandatory only for 1st validator in a cluster)",

@@ -53,7 +53,6 @@ func GetOperatorFromRegistryByID(operatorID types.OperatorID) (*operatorResponse
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("%s\n", respBody)
 	if err := json.Unmarshal(respBody, operator); err != nil {
 		return nil, err
 	}
