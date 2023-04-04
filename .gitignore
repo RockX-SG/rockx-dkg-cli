@@ -1,7 +1,6 @@
-keys/
-!keys/.keep
 cmd/generate_keystore
 dkg_results_*
+keyshares-*
 deposit-data_*
 build/bin/*
 release/*
