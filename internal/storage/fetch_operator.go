@@ -2,6 +2,7 @@ package storage
 
 import (
 	"crypto/rsa"
+	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
@@ -11,6 +12,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/bloxapp/ssv-spec/dkg"
 	"github.com/bloxapp/ssv-spec/types"
@@ -68,7 +70,9 @@ func isUsingHardcodedOperators() bool {
 }
 
 func getResponse(url string) ([]byte, error) {
-	resp, err := http.Get(url)
+	cl := getHttpClient()
+
+	resp, err := cl.Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -96,4 +100,14 @@ func ParsePublicKeyFromBase64(base64Key string) (*rsa.PublicKey, error) {
 	}
 
 	return publicKey.(*rsa.PublicKey), nil
+}
+
+func getHttpClient() *http.Client {
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		IdleConnTimeout: 30 * time.Second, // Close idle connections after 30 seconds
+	}
+
+	// Create an HTTP client with the custom transport
+	return &http.Client{Transport: tr, Timeout: 10 * time.Second}
 }
