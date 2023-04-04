@@ -60,6 +60,10 @@ func GetOperatorFromRegistryByID(operatorID types.OperatorID) (*operatorResponse
 }
 
 func isUsingHardcodedOperators() bool {
+	isHardcoded := os.Getenv("USE_HARDCODED_OPERATORS")
+	if isHardcoded == "" {
+		isHardcoded = "false"
+	}
 	return os.Getenv("USE_HARDCODED_OPERATORS") == "true"
 }
 

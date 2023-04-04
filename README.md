@@ -58,6 +58,12 @@ cd ./build/bin
 export PATH=$PATH:`pwd`
 ```
 
+If you are running this cluster locally and if you are using hardcoded operators than set the following env vars
+```
+export MESSENGER_SRV_ADDR=http://0.0.0.0:3000
+export USE_HARDCODED_OPERATORS=true
+```
+
 You can check all the available command by just typing `rockx-dkg-cli`
 ```
 NAME:
