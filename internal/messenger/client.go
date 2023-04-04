@@ -90,7 +90,7 @@ func (cl *Client) RegisterOperatorNode(id, addr string) error {
 		url := fmt.Sprintf("%s/register_node?subscribes_to=%s", cl.SrvAddr, DefaultTopic)
 		resp, err := cl.client.Post(url, "application/json", bytes.NewReader(byts))
 		if err != nil {
-			err := fmt.Errorf("failed to make request to messenger")
+			err := fmt.Errorf("failed to make request to messenger: %s", err.Error())
 			log.Printf("Error: %s\n", err.Error())
 			errors = append(errors, err)
 			continue
@@ -98,7 +98,7 @@ func (cl *Client) RegisterOperatorNode(id, addr string) error {
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
-			err := fmt.Errorf("failed to register operator of ID %s with the messenger on %d try", sub.Name, try)
+			err := fmt.Errorf("failed to register operator of ID %s with the messenger on %d try: %s", sub.Name, try, err.Error())
 			log.Printf("Error: %s\n", err.Error())
 			errors = append(errors, err)
 		} else {

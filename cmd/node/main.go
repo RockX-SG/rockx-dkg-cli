@@ -6,19 +6,18 @@ import (
 	"strconv"
 
 	"github.com/RockX-SG/frost-dkg-demo/internal/keymanager"
-	"github.com/RockX-SG/frost-dkg-demo/internal/keystore"
 	"github.com/RockX-SG/frost-dkg-demo/internal/messenger"
 	"github.com/RockX-SG/frost-dkg-demo/internal/node"
 	"github.com/RockX-SG/frost-dkg-demo/internal/ping"
 	store "github.com/RockX-SG/frost-dkg-demo/internal/storage"
-	"github.com/rifflock/lfshook"
-	"github.com/sirupsen/logrus"
 
 	"github.com/bloxapp/ssv-spec/dkg"
 	"github.com/bloxapp/ssv-spec/dkg/frost"
 	"github.com/bloxapp/ssv-spec/types"
 	"github.com/dgraph-io/badger/v3"
 	"github.com/gin-gonic/gin"
+	"github.com/rifflock/lfshook"
+	"github.com/sirupsen/logrus"
 )
 
 func init() {
@@ -31,7 +30,7 @@ func main() {
 	params := &AppParams{}
 	params.loadFromEnv()
 
-	log.Infof("app env: %s", params.print())
+	log.Infof("app env: %s messenger: %s", params.print(), messenger.MessengerAddrFromEnv())
 
 	// set up db for storage
 	db, err := setupDB()
@@ -40,19 +39,15 @@ func main() {
 	}
 	defer db.Close()
 
-	ks := &keystore.KeyStoreV4{}
-	if err := ks.DecodeFromFile(params.KeystoreFilePath); err != nil {
-		panic(err)
-	}
-
-	sk, err := ks.ToECDSAPrivateKey(params.keystorePassword)
+	// TODO: add a check to verify the node operator is a valid node operator
+	operatorPrivateKey, err := params.loadDecryptedPrivateKey()
 	if err != nil {
 		panic(err)
 	}
 
 	storage := store.NewStorage(db)
-	network := messenger.NewMessengerClient(params.MessengerHttpAddress)
-	signer := keymanager.NewKeyManager(types.PrimusTestnet, sk)
+	network := messenger.NewMessengerClient(messenger.MessengerAddrFromEnv())
+	signer := keymanager.NewKeyManager(types.PrimusTestnet, operatorPrivateKey)
 
 	config := &dkg.Config{
 		KeygenProtocol:      frost.New,

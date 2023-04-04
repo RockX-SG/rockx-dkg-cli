@@ -11,7 +11,7 @@ import (
 func TestFetchOperatorByID(t *testing.T) {
 	os.Setenv("USE_HARDCODED_OPERATORS", "false")
 
-	var testOperatorID types.OperatorID = 645 //LidoRockX
+	var testOperatorID types.OperatorID = 1 //LidoRockX
 
 	operator, err := FetchOperatorByID(testOperatorID)
 

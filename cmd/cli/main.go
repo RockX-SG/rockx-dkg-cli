@@ -93,6 +93,20 @@ func main() {
 				},
 			},
 			{
+				Name:    "get-keyshares",
+				Aliases: []string{"gr"},
+				Usage:   "get keyshares for registering the validator on ssv UI",
+				Action:  h.HandleGetKeyShares,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "request-id",
+						Aliases:  []string{"req"},
+						Usage:    "request id for keygen/resharing",
+						Required: true,
+					},
+				},
+			},
+			{
 				Name:    "generate-deposit-data",
 				Aliases: []string{"gdd"},
 				Usage:   "generate deposit data in json format",

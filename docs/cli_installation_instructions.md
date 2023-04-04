@@ -22,10 +22,11 @@ wget https://github.com/RockX-SG/rockx-dkg-cli/releases/download/0.1.1/rockx-dkg
 tar -xzvf rockx-dkg-cli.0.1.1.darwin.arm64.tar.gz
 ```
 
-3. Move the file to your PATH
+3. Move the file to your PATH and Set messenger service address for the cli
 
 ```
 cp ./rockx-dkg-cli /usr/local/bin
+export MESSENGER_SRV_ADDR=https://dkg-messenger.rockx.com
 ```
 
 4. Perform DKG
@@ -36,7 +37,7 @@ rockx-dkg-cli keygen \
  --operator 3="http://34.87.9.120:8080" \
  --operator 4="http://34.124.174.255:8080" \
  --threshold 3 \
- --withdrawal-credentials "010000000000000000000000535953b5a6040074948cf185eaa7d2abbd66808f" \
+ --withdrawal-credentials "0100000000000000000000001d2f14d2dffee594b4093d42e4bc1b0ea55e8aa7" \
  --fork-version "prater"
 ```
 
@@ -49,7 +50,7 @@ rockx-dkg-cli get-dkg-results \
 6. Generate Deposit Data
 ```
 rockx-dkg-cli generate-deposit-data \
- --withdrawal-credentials "010000000000000000000000535953b5a6040074948cf185eaa7d2abbd66808f" \
+ --withdrawal-credentials "0100000000000000000000001d2f14d2dffee594b4093d42e4bc1b0ea55e8aa7" \
  --fork-version "prater" \
  --request-id f99672b06987b3ae88a2f884488d684373bb18be8eb72e5d
 ```
