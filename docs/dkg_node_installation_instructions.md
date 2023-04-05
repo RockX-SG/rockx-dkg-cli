@@ -56,7 +56,7 @@ docker pull asia-southeast1-docker.pkg.dev/rockx-mpc-lab/rockx-dkg/rockx-dkg-nod
 
 #### Run the container with the env file and the keystore folder
 ```
-docker run -d --name operator-node -v ./keystorefiles:/keys --env-file ./env/operator.1.env -p 8080:8080 asia-southeast1-docker.pkg.dev/rockx-mpc-lab/rockx-dkg/rockx-dkg-node
+docker run -d --name operator-node -v $PWD/keystorefiles:/keys --env-file ./env/operator.1.env -p 8080:8080 asia-southeast1-docker.pkg.dev/rockx-mpc-lab/rockx-dkg/rockx-dkg-node
 ```
 
 ### Creating/Importing keystore files
