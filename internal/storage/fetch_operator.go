@@ -71,7 +71,6 @@ func isUsingHardcodedOperators() bool {
 
 func getResponse(url string) ([]byte, error) {
 	cl := getHttpClient()
-
 	resp, err := cl.Get(url)
 	if err != nil {
 		return nil, err
@@ -105,9 +104,9 @@ func ParsePublicKeyFromBase64(base64Key string) (*rsa.PublicKey, error) {
 func getHttpClient() *http.Client {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		IdleConnTimeout: 30 * time.Second, // Close idle connections after 30 seconds
+		IdleConnTimeout: 5 * time.Minute, // Close idle connections after 30 seconds
 	}
 
 	// Create an HTTP client with the custom transport
-	return &http.Client{Transport: tr, Timeout: 10 * time.Second}
+	return &http.Client{Transport: tr, Timeout: 5 * time.Minute}
 }
