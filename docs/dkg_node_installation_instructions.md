@@ -1,21 +1,6 @@
 # DKG Operator Node - installation
 
-### Dockerfile
-[here](../build/docker/node/Dockerfile)
-```
-FROM     golang:1.19-buster AS builder
-WORKDIR  /app
-COPY     . .
-RUN      go mod download && make build_node
-
-FROM     ubuntu:18.04
-WORKDIR  /app
-VOLUME   /keys
-COPY     --from=builder /app/build/bin/node /app/node
-CMD      ["./node"] 
-```
-
-### Environment variables
+### Environment variables for .env file
 ```
 NODE_OPERATOR_ID=1
 NODE_ADDR=0.0.0.0:8080
@@ -33,7 +18,7 @@ USE_HARDCODED_OPERATORS=false
 
 #### Keystore file
 
-Create a folder like `keystorefiles` here and mv your keystore file. 
+To proceed, create a new folder called `keystorefiles` in this location, and move your keystore file there. This file contains the private key for the eth1 address of your SSV Node operator. It's important to ensure that you're using the keystore file corresponding to the eth address of the node operator's owner. For example, if the SSV node operator's eth address is 2d618a45796936b1b7aeb87d01ee70e09254487d, then the keystore file used for the DKG node must be the same as the one shown below.
 
 ```
 ls keystorefiles/
