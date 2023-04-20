@@ -48,8 +48,19 @@ docker run -d --name operator-node -v $PWD/keystorefiles:/keys --env-file ./env/
 
 ### Creating/Importing keystore files
 
-Keystore files (version 3) for ethereum accounts can be generated in multiple ways, here is an example by using a tool called `clef`. The documentation and installation instructions for clef can be found here
+Keystore files (version 3) for ethereum accounts can be generated in multiple ways, here is an example by using a tool called `clef`. 
+
+The documentation and installation instructions for clef can be found here
 > https://geth.ethereum.org/docs/tools/clef/introduction
+
+or you can simply run it via docker 
+
+```
+mkdir keystorefiles
+docker run -it --rm --entrypoint sh -v $PWD/keystorefiles:/keystorefiles ethereum/client-go:alltools-stable
+```
+
+Now you can run commands for creating a new account or importing an existing one from below
 
 #### Creating a new key
 ```
@@ -63,10 +74,9 @@ INFO [10-28|16:19:09.156] Your new key was generated       address=0x5e97870f263
 WARN [10-28|16:19:09.306] Please backup your key file      path=/home/user/go-ethereum/data/keystore/UTC--2022-10-28T15-19-08.000825927Z--5e97870f263700f46aa00d967821199b9bc5a120
 WARN [10-28|16:19:09.306] Please remember your password!
 Generated account 0x5e97870f263700f46aa00d967821199b9bc5a120
-
-Show all
-
 ```
+
+You can directly import this keystore file into Metamask by following these [instructions](https://support.metamask.io/hc/en-us/articles/360015489331-How-to-import-an-account#h_01G01W0D3TGE72A7ZBV0FMSZX1)
 
 #### Importing existing key
 
