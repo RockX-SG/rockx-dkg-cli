@@ -36,9 +36,9 @@ release_linux_amd64:
 	mkdir -p $(GOBASE)/release/$(VERSION)
 
 	cd $(GOBIN)/darwin_arm64 && pwd && \
-	tar -czvf $(GOBASE)/release/$(VERSION)/rockx-dkg-messenger.$(VERSION).linux.arm64.tar.gz rockx-dkg-messenger && \
-	tar -czvf $(GOBASE)/release/$(VERSION)/rockx-dkg-node.$(VERSION).linux.arm64.tar.gz rockx-dkg-node && \
-	tar -czvf $(GOBASE)/release/$(VERSION)/rockx-dkg-cli.$(VERSION).linux.arm64.tar.gz rockx-dkg-cli && \
+	tar -czvf $(GOBASE)/release/$(VERSION)/rockx-dkg-messenger.$(VERSION).linux.amd64.tar.gz rockx-dkg-messenger && \
+	tar -czvf $(GOBASE)/release/$(VERSION)/rockx-dkg-node.$(VERSION).linux.amd64.tar.gz rockx-dkg-node && \
+	tar -czvf $(GOBASE)/release/$(VERSION)/rockx-dkg-cli.$(VERSION).linux.amd64.tar.gz rockx-dkg-cli && \
 	cd $(GOBASE)
 
 deps:
