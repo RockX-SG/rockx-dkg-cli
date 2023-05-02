@@ -7,7 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/big"
 	"net/http"
 	"os"
@@ -221,7 +221,7 @@ func (h *CliHandler) fetchDKGResults(requestID string) (*DKGResult, error) {
 	}
 
 	data := &messenger.DataStore{}
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 	if err := json.Unmarshal(body, &data); err != nil {
 		return nil, err
 	}
@@ -260,7 +260,7 @@ func (results *DKGResult) toKeyShares() (*KeyShares, error) {
 
 	operatorData := make([]OperatorData, 0)
 	operatorIds := make([]uint32, 0)
-	for operatorID, _ := range results.Output {
+	for operatorID := range results.Output {
 		od := OperatorData{
 			ID: uint32(operatorID),
 		}

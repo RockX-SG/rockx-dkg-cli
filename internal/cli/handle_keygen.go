@@ -90,7 +90,7 @@ type KeygenRequest struct {
 
 func (request *KeygenRequest) allOperators() []types.OperatorID {
 	operators := []types.OperatorID{}
-	for operatorID, _ := range request.Operators {
+	for operatorID := range request.Operators {
 		operators = append(operators, operatorID)
 	}
 	return operators

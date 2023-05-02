@@ -121,14 +121,14 @@ func (request *ResharingRequest) nodeAddress(operatorID types.OperatorID) string
 
 func (request *ResharingRequest) newOperators() []types.OperatorID {
 	operators := []types.OperatorID{}
-	for operatorID, _ := range request.Operators {
+	for operatorID := range request.Operators {
 		operators = append(operators, operatorID)
 	}
 	return operators
 }
 func (request *ResharingRequest) oldOperators() []types.OperatorID {
 	operatorsOld := []types.OperatorID{}
-	for operatorID, _ := range request.OperatorsOld {
+	for operatorID := range request.OperatorsOld {
 		operatorsOld = append(operatorsOld, operatorID)
 	}
 	return operatorsOld
