@@ -139,7 +139,7 @@ func (cl *Client) stream(urlparam string, requestID string, data []byte) error {
 }
 
 func (cl *Client) CreateTopic(requestID string, l []types.OperatorID) error {
-	topic := CreateTopicReq{
+	topic := TopicJSON{
 		TopicName:   requestID,
 		Subscribers: make([]string, 0),
 	}

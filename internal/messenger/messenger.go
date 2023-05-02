@@ -16,6 +16,7 @@ import (
 	"github.com/bloxapp/ssv-spec/dkg"
 	"github.com/bloxapp/ssv-spec/dkg/frost"
 	"github.com/bloxapp/ssv-spec/types"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -27,6 +28,8 @@ type Messenger struct {
 	Data   map[string]*DataStore
 
 	Incoming chan *Message
+
+	logger *logrus.Logger
 }
 
 type Topic struct {
@@ -97,7 +100,7 @@ func (m *Messenger) ProcessIncomingMessageWorker(ctx *context.Context) {
 	}
 }
 
-var (
+const (
 	maxRetriesAllowed = 10
 )
 
@@ -119,7 +122,7 @@ func (s *Subscriber) ProcessOutgoingMessageWorker(ctx *context.Context) {
 		}
 
 		if numRetries > 0 {
-			time.Sleep(time.Duration(numRetries) * (time.Second))
+			time.Sleep(2 * (time.Second))
 		}
 
 		_, exist := s.SubscribesTo[msg.Topic]
@@ -135,7 +138,6 @@ func (s *Subscriber) ProcessOutgoingMessageWorker(ctx *context.Context) {
 			continue
 		}
 
-		// TODO: remove this after testing
 		respbody, _ := io.ReadAll(resp.Body)
 		if resp.StatusCode != http.StatusOK {
 			s.Outgoing <- msg
