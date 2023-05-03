@@ -5,11 +5,15 @@ import (
 	"os"
 
 	clihandler "github.com/RockX-SG/frost-dkg-demo/internal/cli"
+	"github.com/RockX-SG/frost-dkg-demo/internal/logger"
 	"github.com/urfave/cli/v2"
 )
 
 func main() {
-	h := clihandler.New()
+
+	logger := logger.New("dkg_cli.log")
+	h := clihandler.New(logger)
+
 	app := &cli.App{
 		Name:  "rockx-dkg-cli",
 		Usage: "A cli tool to run DKG for keygen and resharing and generate deposit data",

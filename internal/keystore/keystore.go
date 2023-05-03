@@ -13,6 +13,5 @@ func ReadKeystoreFromFile(filepath string) (*keystore.Key, error) {
 		return nil, err
 	}
 	k := &keystore.Key{}
-	json.Unmarshal(filedata, k)
-	return k, err
+	return k, json.Unmarshal(filedata, k)
 }
