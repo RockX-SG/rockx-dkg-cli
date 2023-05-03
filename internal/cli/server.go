@@ -156,7 +156,14 @@ func (h *CliHandler) HandleGetDepositData(c *cli.Context) error {
 		return err
 	}
 
-	validatorPK, _ := hex.DecodeString(results.Output[1].Data.ValidatorPubKey)
+	// all operators will have same validatorPK in their result
+	var firstOperator types.OperatorID
+	for k := range results.Output {
+		firstOperator = k
+		break
+	}
+
+	validatorPK, _ := hex.DecodeString(results.Output[firstOperator].Data.ValidatorPubKey)
 	withdrawalCredentials, _ := hex.DecodeString(c.String("withdrawal-credentials"))
 	fork := types.NetworkFromString(c.String("fork-version")).ForkVersion()
 	amount := phase0.Gwei(types.MaxEffectiveBalanceInGwei)
@@ -173,7 +180,7 @@ func (h *CliHandler) HandleGetDepositData(c *cli.Context) error {
 	}
 	depositMsgRoot, _ := depositMsg.HashTreeRoot()
 
-	blsSigBytes, _ := hex.DecodeString(results.Output[1].Data.DepositDataSignature)
+	blsSigBytes, _ := hex.DecodeString(results.Output[firstOperator].Data.DepositDataSignature)
 	blsSig := phase0.BLSSignature{}
 	copy(blsSig[:], blsSigBytes)
 	depositData.Signature = blsSig
@@ -181,13 +188,14 @@ func (h *CliHandler) HandleGetDepositData(c *cli.Context) error {
 	depositDataRoot, _ := depositData.HashTreeRoot()
 
 	response := DepositDataJson{
-		PubKey:                results.Output[1].Data.ValidatorPubKey,
+		PubKey:                results.Output[firstOperator].Data.ValidatorPubKey,
 		WithdrawalCredentials: c.String("withdrawal-credentials"),
 		Amount:                amount,
-		Signature:             results.Output[1].Data.DepositDataSignature,
+		Signature:             results.Output[firstOperator].Data.DepositDataSignature,
 		DepositMessageRoot:    hex.EncodeToString(depositMsgRoot[:]),
 		DepositDataRoot:       hex.EncodeToString(depositDataRoot[:]),
 		ForkVersion:           hex.EncodeToString(fork[:]),
+		NetworkName:           c.String("fork-version"),
 		DepositCliVersion:     "2.3.0",
 	}
 
