@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/RockX-SG/frost-dkg-demo/internal/logger"
 	"github.com/RockX-SG/frost-dkg-demo/internal/messenger"
 	"github.com/RockX-SG/frost-dkg-demo/internal/ping"
 	"github.com/RockX-SG/frost-dkg-demo/internal/workers"
@@ -13,10 +12,7 @@ import (
 )
 
 func main() {
-	logger := logger.New("dkg_messenger.log")
-	if logger == nil {
-		panic(logger)
-	}
+	// logger := logger.New()
 
 	m := &messenger.Messenger{
 		Topics: map[string]*messenger.Topic{

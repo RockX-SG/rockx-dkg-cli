@@ -11,7 +11,7 @@ import (
 
 func main() {
 
-	logger := logger.New("dkg_cli.log")
+	logger := logger.New()
 	h := clihandler.New(logger)
 
 	app := &cli.App{

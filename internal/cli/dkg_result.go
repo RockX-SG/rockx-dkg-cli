@@ -91,7 +91,7 @@ func (results *DKGResult) toKeyShares() (*KeyShares, error) {
 	}, nil
 }
 
-func formatResults(data *messenger.DataStore) DKGResult {
+func formatResults(data *messenger.DataStore) *DKGResult {
 	if data.BlameOutput != nil {
 		return formatBlameResults(data.BlameOutput)
 	}
@@ -113,9 +113,9 @@ func formatResults(data *messenger.DataStore) DKGResult {
 		output[operatorID] = v
 	}
 
-	return DKGResult{Output: output}
+	return &DKGResult{Output: output}
 }
 
-func formatBlameResults(blameOutput *dkg.BlameOutput) DKGResult {
-	return DKGResult{Blame: blameOutput}
+func formatBlameResults(blameOutput *dkg.BlameOutput) *DKGResult {
+	return &DKGResult{Blame: blameOutput}
 }
