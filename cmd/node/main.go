@@ -75,6 +75,8 @@ func main() {
 
 	// register api routes
 	r := gin.Default()
+	r.Use(logger.GinLogger(log))
+
 	r.GET("/ping", ping.HandlePing)
 
 	// handle incoming message

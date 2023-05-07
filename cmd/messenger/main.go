@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	logger := logger.New("/var/log/dkg_messenger.log")
+	log := logger.New("/var/log/dkg_messenger.log")
 
 	m := &messenger.Messenger{
 		Topics: map[string]*messenger.Topic{
@@ -25,9 +25,9 @@ func main() {
 		Incoming: make(chan *messenger.Message, 50),
 		Data:     make(map[string]*messenger.DataStore),
 	}
-	m.WithLogger(logger)
+	m.WithLogger(log)
 
-	runner := workers.NewRunner(logger)
+	runner := workers.NewRunner(log)
 	go runner.Run()
 
 	runner.AddJob(&workers.Job{
@@ -41,6 +41,7 @@ func main() {
 	}
 
 	r := gin.Default()
+	r.Use(logger.GinLogger(log))
 	setRoutes(r, m, runner)
 
 	panic(r.Run(messengerAddr))

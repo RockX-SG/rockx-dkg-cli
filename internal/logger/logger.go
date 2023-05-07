@@ -3,7 +3,9 @@ package logger
 import (
 	"os"
 	"strings"
+	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
@@ -48,6 +50,44 @@ func New(logFilePath string) *Logger {
 
 	logger.Infof("writing logs to: %s", logFilePath)
 	return logger
+}
+
+func GinLogger(logger *Logger) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		start := time.Now()
+		path := c.Request.URL.Path
+		raw := c.Request.URL.RawQuery
+
+		// Process request
+		c.Next()
+
+		end := time.Now()
+		latency := end.Sub(start)
+
+		clientIP := c.ClientIP()
+		method := c.Request.Method
+		statusCode := c.Writer.Status()
+		errorMessage := c.Errors.ByType(gin.ErrorTypePrivate).String()
+
+		entry := logger.WithFields(logrus.Fields{
+			"status_code": statusCode,
+			"latency":     latency,
+			"client_ip":   clientIP,
+			"method":      method,
+			"path":        path,
+			"query":       raw,
+			"error":       errorMessage,
+		})
+
+		switch {
+		case statusCode >= 500:
+			entry.Error()
+		case statusCode >= 400:
+			entry.Warn()
+		default:
+			entry.Info()
+		}
+	}
 }
 
 func generate8digitUUID() string {
