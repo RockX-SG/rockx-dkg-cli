@@ -1,7 +1,6 @@
 package logger
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
@@ -14,19 +13,25 @@ type Logger struct {
 	*logrus.Logger
 }
 
-func New() *Logger {
+func New(logFilePath string) *Logger {
 
 	// Create a new Logrus logger instance
 	logger := &Logger{logrus.New()}
 
 	// Set the log level to Info
-	if os.Getenv("DKG_LOG_LEVEL") == "true" {
-		logger.SetLevel(logrus.DebugLevel)
-	} else {
+	if os.Getenv("DKG_LOG_LEVEL") == "release" {
 		logger.SetLevel(logrus.InfoLevel)
+	} else {
+		logger.SetLevel(logrus.DebugLevel)
 	}
 
-	logFilePath := fmt.Sprintf("/var/log/dkg_%s.log", generate8digitUUID())
+	// basePath := "/var/log"
+	// if os.Getenv("DKG_CLI_LOG_BASE_PATH") != "" {
+	// 	basePath = os.Getenv("DKG_CLI_LOG_BASE_PATH")
+	// }
+
+	// filename := fmt.Sprintf("dkg_%s.log", generate8digitUUID())
+	// logFilePath := fmt.Sprintf("%s/%s", basePath, filename)
 
 	// Create a new LFS hook to write log messages to a file
 	fileHook := lfshook.NewHook(lfshook.PathMap{
@@ -41,6 +46,7 @@ func New() *Logger {
 	// Set the logger to not print to the console
 	logger.SetOutput(os.Stdout)
 
+	logger.Infof("writing logs to: %s", logFilePath)
 	return logger
 }
 

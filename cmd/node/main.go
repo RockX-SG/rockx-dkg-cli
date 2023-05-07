@@ -24,7 +24,7 @@ func init() {
 }
 
 func main() {
-	log := logger.New()
+	log := logger.New("/var/log/dkg_node.log")
 
 	params := &AppParams{}
 	params.loadFromEnv()
