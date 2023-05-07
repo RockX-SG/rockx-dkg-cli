@@ -3,19 +3,27 @@ package node
 import (
 	"encoding/hex"
 	"io"
-	"log"
 	"net/http"
 
+	"github.com/RockX-SG/frost-dkg-demo/internal/logger"
 	"github.com/bloxapp/ssv-spec/dkg"
 	"github.com/bloxapp/ssv-spec/types"
 	"github.com/gin-gonic/gin"
 )
 
-func HandleConsume(node *dkg.Node) func(*gin.Context) {
+type ApiHandler struct {
+	logger *logger.Logger
+}
+
+func New(logger *logger.Logger) *ApiHandler {
+	return &ApiHandler{logger: logger}
+}
+
+func (h *ApiHandler) HandleConsume(node *dkg.Node) func(*gin.Context) {
 	return func(c *gin.Context) {
 		data, err := io.ReadAll(c.Request.Body)
 		if err != nil {
-			log.Printf("Error: %s\n", err.Error())
+			h.logger.Errorf("HandleConsume: failed to read request body: %w", err)
 			c.JSON(http.StatusBadRequest, gin.H{
 				"message": "failed to load data from request body",
 				"error":   err.Error(),
@@ -25,7 +33,7 @@ func HandleConsume(node *dkg.Node) func(*gin.Context) {
 
 		msg := &types.SSVMessage{}
 		if err = msg.Decode(data); err != nil {
-			log.Printf("Error: %s\n", err.Error())
+			h.logger.Errorf("HandleConsume: failed to parse data from request body: %w", err)
 			c.JSON(http.StatusBadRequest, gin.H{
 				"message": "failed to parse data from request body",
 				"error":   err.Error(),
@@ -34,15 +42,15 @@ func HandleConsume(node *dkg.Node) func(*gin.Context) {
 		}
 
 		if err = node.ProcessMessage(msg); err != nil {
-			log.Printf("Error: %s\n", err.Error())
+			h.logger.Errorf("HandleConsume: dkg node failed to process incoming message: %w", err)
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"message": "failed to process message",
+				"message": "dkg node failed to process message",
 				"error":   err.Error(),
 			})
 			return
 		}
 
-		log.Printf("HandleConsume finished successfully\n")
+		h.logger.Infof("HandleConsume: dkg node processed incoming message successfully")
 		c.JSON(http.StatusOK, gin.H{
 			"message": "processed message successfully",
 			"error":   nil,
@@ -50,12 +58,12 @@ func HandleConsume(node *dkg.Node) func(*gin.Context) {
 	}
 }
 
-func HandleGetDKGResults(node *dkg.Node) func(*gin.Context) {
+func (h *ApiHandler) HandleGetDKGResults(node *dkg.Node) func(*gin.Context) {
 	return func(c *gin.Context) {
-		vk := c.Param("vk")
-		vkByte, _ := hex.DecodeString(vk)
+		vkByte, _ := hex.DecodeString(c.Param("vk"))
 		output, err := node.GetConfig().GetStorage().GetKeyGenOutput(vkByte)
 		if err != nil {
+			h.logger.Errorf("HandleGetDKGResults: failed to get dkg result for vk %s: %w", c.Param("vk"), err)
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}

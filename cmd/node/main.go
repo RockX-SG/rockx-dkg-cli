@@ -28,25 +28,26 @@ func main() {
 
 	params := &AppParams{}
 	params.loadFromEnv()
-
-	log.Infof("app env: %s messenger: %s", params.print(), messenger.MessengerAddrFromEnv())
+	log.Debugf("app env: %s messenger: %s", params.print(), messenger.MessengerAddrFromEnv())
 
 	// set up db for storage
 	db, err := setupDB()
 	if err != nil {
+		log.Errorf("Main: failed to setup DB: %w", err)
 		panic(err)
 	}
 	defer db.Close()
+	storage := store.NewStorage(db)
 
 	// TODO: add a check to verify the node operator is a valid node operator
 	operatorPrivateKey, err := params.loadDecryptedPrivateKey()
 	if err != nil {
+		log.Errorf("Main: failed to load decrypted private key: %w", err)
 		panic(err)
 	}
-
-	storage := store.NewStorage(db)
-	network := messenger.NewMessengerClient(messenger.MessengerAddrFromEnv())
 	signer := keymanager.NewKeyManager(types.PrimusTestnet, operatorPrivateKey)
+
+	network := messenger.NewMessengerClient(messenger.MessengerAddrFromEnv())
 
 	config := &dkg.Config{
 		KeygenProtocol:      frost.New,
@@ -56,22 +57,31 @@ func main() {
 		Storage:             storage,
 		SignatureDomainType: types.PrimusTestnet,
 	}
-	dkgnode := dkg.NewNode(thisOperator(uint32(params.OperatorID), storage), config)
+
+	thisOperator, err := thisOperator(uint32(params.OperatorID), storage)
+	if err != nil {
+		log.Errorf("Main: failed to get operator %d from operator registry: %w", err)
+		panic(err)
+	}
+	dkgnode := dkg.NewNode(thisOperator, config)
 
 	// register dkg operator node with the messenger
 	if err := network.RegisterOperatorNode(strconv.Itoa(int(params.OperatorID)), os.Getenv("NODE_BROADCAST_ADDR")); err != nil {
+		log.Errorf("Main: %w", err)
 		panic(err)
 	}
+
+	h := node.New(log)
 
 	// register api routes
 	r := gin.Default()
 	r.GET("/ping", ping.HandlePing)
 
 	// handle incoming message
-	r.POST("/consume", node.HandleConsume(dkgnode))
+	r.POST("/consume", h.HandleConsume(dkgnode))
 
 	// get dkg results
-	r.GET("/dkg_results/:vk", node.HandleGetDKGResults(dkgnode))
+	r.GET("/dkg_results/:vk", h.HandleGetDKGResults(dkgnode))
 
 	panic(r.Run(params.HttpAddress))
 }
@@ -80,13 +90,13 @@ func setupDB() (*badger.DB, error) {
 	return badger.Open(badger.DefaultOptions("/frost-dkg-data"))
 }
 
-func thisOperator(operatorID uint32, storage dkg.Storage) *dkg.Operator {
+func thisOperator(operatorID uint32, storage dkg.Storage) (*dkg.Operator, error) {
 	exist, operator, err := storage.GetDKGOperator(types.OperatorID(operatorID))
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	if !exist {
-		panic(fmt.Sprintf("operator with ID %d doesn't exist", operatorID))
+		return nil, fmt.Errorf("operator with ID %d doesn't exist", operatorID)
 	}
-	return operator
+	return operator, nil
 }
