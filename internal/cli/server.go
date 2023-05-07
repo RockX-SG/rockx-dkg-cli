@@ -14,7 +14,16 @@ import (
 	"github.com/RockX-SG/frost-dkg-demo/internal/messenger"
 	"github.com/bloxapp/ssv-spec/dkg"
 	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli/v2"
 )
+
+type Handler interface {
+	HandleKeygen(c *cli.Context) error
+	HandleResharing(c *cli.Context) error
+	HandleGetData(c *cli.Context) error
+	HandleGetDepositData(c *cli.Context) error
+	HandleGetKeyShares(c *cli.Context) error
+}
 
 type CliHandler struct {
 	client        *http.Client
@@ -22,7 +31,7 @@ type CliHandler struct {
 	messengerAddr string
 }
 
-func New(logger *logger.Logger) *CliHandler {
+func New(logger *logger.Logger) Handler {
 	logger.WithFields(logrus.Fields{"messenger-server-address": messenger.MessengerAddrFromEnv()}).
 		Debug("created new cli handler")
 

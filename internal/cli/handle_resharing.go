@@ -16,9 +16,9 @@ import (
 )
 
 func (h *CliHandler) HandleResharing(c *cli.Context) error {
-	resharingRequest, err := parseResharingRequest(c)
-	if err != nil {
-		return err
+	resharingRequest := &ResharingRequest{}
+	if err := resharingRequest.parseResharingRequest(c); err != nil {
+		return fmt.Errorf("HandleResharing: failed to parse resharing request: %w", err)
 	}
 
 	requestID := getRandRequestID()
@@ -30,17 +30,17 @@ func (h *CliHandler) HandleResharing(c *cli.Context) error {
 
 	messengerClient := messenger.NewMessengerClient(messenger.MessengerAddrFromEnv())
 	if err := messengerClient.CreateTopic(requestIDInHex, alloperators); err != nil {
-		return err
+		return fmt.Errorf("HandleResharing: failed to createa new topic on messenger service: %w", err)
 	}
 
 	initMsgBytes, err := resharingRequest.initMsgForResharing(requestID)
 	if err != nil {
-		return err
+		return fmt.Errorf("HandleResharing: failed to generate init message for keygen: %w", err)
 	}
 
 	for _, operatorID := range alloperators {
 		addr := resharingRequest.nodeAddress(operatorID)
-		if err := sendReshareMsg(operatorID, addr, initMsgBytes); err != nil {
+		if err := h.sendReshareMsg(operatorID, addr, initMsgBytes); err != nil {
 			return err
 		}
 	}
@@ -49,47 +49,9 @@ func (h *CliHandler) HandleResharing(c *cli.Context) error {
 	return nil
 }
 
-func parseResharingRequest(c *cli.Context) (*ResharingRequest, error) {
-	resharingRequest := ResharingRequest{
-		Operators:    make(map[types.OperatorID]string),
-		OperatorsOld: make(map[types.OperatorID]string),
-		Threshold:    c.Int("threshold"),
-		ValidatorPK:  c.String("validator-pk"),
-	}
-
-	operatorkv := c.StringSlice("operator")
-	for _, op := range operatorkv {
-		op = strings.Trim(op, " ")
-		pair := strings.Split(op, "=")
-		if len(pair) != 2 {
-			return nil, fmt.Errorf("operator %s is not in the form of key=value", op)
-		}
-		opID, err := strconv.Atoi(pair[0])
-		if err != nil {
-			return nil, err
-		}
-		resharingRequest.Operators[types.OperatorID(opID)] = pair[1]
-	}
-
-	oldoperatorkv := c.StringSlice("old-operator")
-	for _, op := range oldoperatorkv {
-		op = strings.Trim(op, " ")
-		pair := strings.Split(op, "=")
-		if len(pair) != 2 {
-			return nil, fmt.Errorf("operator %s is not in the form of key=value", op)
-		}
-		opID, err := strconv.Atoi(pair[0])
-		if err != nil {
-			return nil, err
-		}
-		resharingRequest.OperatorsOld[types.OperatorID(opID)] = pair[1]
-	}
-	return &resharingRequest, nil
-}
-
-func sendReshareMsg(operatorID types.OperatorID, addr string, data []byte) error {
+func (h *CliHandler) sendReshareMsg(operatorID types.OperatorID, addr string, data []byte) error {
 	url := fmt.Sprintf("%s/consume", addr)
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(data))
+	resp, err := h.client.Post(url, "application/json", bytes.NewBuffer(data))
 	if err != nil {
 		return err
 	}
@@ -106,6 +68,44 @@ type ResharingRequest struct {
 	Threshold    int                         `json:"threshold"`
 	ValidatorPK  string                      `json:"validator_pk"`
 	OperatorsOld map[types.OperatorID]string `json:"operators_old"`
+}
+
+func (request *ResharingRequest) parseResharingRequest(c *cli.Context) error {
+	resharingRequest := ResharingRequest{
+		Operators:    make(map[types.OperatorID]string),
+		OperatorsOld: make(map[types.OperatorID]string),
+		Threshold:    c.Int("threshold"),
+		ValidatorPK:  c.String("validator-pk"),
+	}
+
+	operatorkv := c.StringSlice("operator")
+	for _, op := range operatorkv {
+		op = strings.Trim(op, " ")
+		pair := strings.Split(op, "=")
+		if len(pair) != 2 {
+			return fmt.Errorf("operator %s is not in the form of key=value", op)
+		}
+		opID, err := strconv.Atoi(pair[0])
+		if err != nil {
+			return err
+		}
+		resharingRequest.Operators[types.OperatorID(opID)] = pair[1]
+	}
+
+	oldoperatorkv := c.StringSlice("old-operator")
+	for _, op := range oldoperatorkv {
+		op = strings.Trim(op, " ")
+		pair := strings.Split(op, "=")
+		if len(pair) != 2 {
+			return fmt.Errorf("operator %s is not in the form of key=value", op)
+		}
+		opID, err := strconv.Atoi(pair[0])
+		if err != nil {
+			return err
+		}
+		resharingRequest.OperatorsOld[types.OperatorID(opID)] = pair[1]
+	}
+	return nil
 }
 
 func (request *ResharingRequest) nodeAddress(operatorID types.OperatorID) string {

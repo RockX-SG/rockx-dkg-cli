@@ -16,9 +16,9 @@ import (
 )
 
 func (h *CliHandler) HandleKeygen(c *cli.Context) error {
-	keygenRequest, err := parseKeygenRequest(c)
-	if err != nil {
-		return err
+	keygenRequest := &KeygenRequest{}
+	if err := keygenRequest.parseKeygenRequest(c); err != nil {
+		return fmt.Errorf("HandleKeygen: failed to parse keygen request: %w", err)
 	}
 
 	requestID := getRandRequestID()
@@ -26,17 +26,17 @@ func (h *CliHandler) HandleKeygen(c *cli.Context) error {
 
 	messengerClient := messenger.NewMessengerClient(messenger.MessengerAddrFromEnv())
 	if err := messengerClient.CreateTopic(requestIDInHex, keygenRequest.allOperators()); err != nil {
-		return err
+		return fmt.Errorf("HandleKeygen: failed to create a new topic on messenger service: %w", err)
 	}
 
 	initMsgBytes, err := keygenRequest.initMsgForKeygen(requestID)
 	if err != nil {
-		return err
+		return fmt.Errorf("HandleKeygen: failed to generate init message for keygen: %w", err)
 	}
 
 	for operatorID, nodeAddr := range keygenRequest.Operators {
-		if err := sendInitMsg(operatorID, nodeAddr, initMsgBytes); err != nil {
-			return err
+		if err := h.sendInitMsg(operatorID, nodeAddr, initMsgBytes); err != nil {
+			return fmt.Errorf("HandleKeygen: failed to send init message to operatorID %d: %w", operatorID, err)
 		}
 	}
 
@@ -44,41 +44,17 @@ func (h *CliHandler) HandleKeygen(c *cli.Context) error {
 	return nil
 }
 
-func sendInitMsg(operatorID types.OperatorID, addr string, data []byte) error {
+func (h *CliHandler) sendInitMsg(operatorID types.OperatorID, addr string, data []byte) error {
 	url := fmt.Sprintf("%s/consume", addr)
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(data))
+	resp, err := h.client.Post(url, "application/json", bytes.NewBuffer(data))
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to send init message to the operator %d", operatorID)
+		return fmt.Errorf("request to operator %d to consume init message failed with status %s", operatorID, resp.Status)
 	}
 	return nil
-}
-
-func parseKeygenRequest(c *cli.Context) (*KeygenRequest, error) {
-	keygenRequest := KeygenRequest{
-		Operators:            make(map[types.OperatorID]string),
-		Threshold:            c.Int("threshold"),
-		WithdrawalCredential: c.String("withdrawal-credentials"),
-		ForkVersion:          c.String("fork-version"),
-	}
-	operatorkv := c.StringSlice("operator")
-	for _, op := range operatorkv {
-		op = strings.Trim(op, " ")
-		pair := strings.Split(op, "=")
-		if len(pair) != 2 {
-			return nil, fmt.Errorf("operator %s is not in the form of key=value", op)
-		}
-		opID, err := strconv.Atoi(pair[0])
-		if err != nil {
-			return nil, err
-		}
-		keygenRequest.Operators[types.OperatorID(opID)] = pair[1]
-	}
-
-	return &keygenRequest, nil
 }
 
 type KeygenRequest struct {
@@ -94,6 +70,30 @@ func (request *KeygenRequest) allOperators() []types.OperatorID {
 		operators = append(operators, operatorID)
 	}
 	return operators
+}
+
+func (request *KeygenRequest) parseKeygenRequest(c *cli.Context) error {
+	keygenRequest := KeygenRequest{
+		Operators:            make(map[types.OperatorID]string),
+		Threshold:            c.Int("threshold"),
+		WithdrawalCredential: c.String("withdrawal-credentials"),
+		ForkVersion:          c.String("fork-version"),
+	}
+	operatorkv := c.StringSlice("operator")
+	for _, op := range operatorkv {
+		op = strings.Trim(op, " ")
+		pair := strings.Split(op, "=")
+		if len(pair) != 2 {
+			return fmt.Errorf("operator %s is not in the form of key=value", op)
+		}
+		opID, err := strconv.Atoi(pair[0])
+		if err != nil {
+			return err
+		}
+		keygenRequest.Operators[types.OperatorID(opID)] = pair[1]
+	}
+
+	return nil
 }
 
 func (request *KeygenRequest) initMsgForKeygen(requestID dkg.RequestID) ([]byte, error) {

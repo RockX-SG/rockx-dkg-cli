@@ -13,7 +13,7 @@ func (h *CliHandler) HandleGetKeyShares(c *cli.Context) error {
 
 	result, err := h.DKGResultByRequestID(requestID)
 	if err != nil {
-		return fmt.Errorf("HandleGetKeyShares: failed to get dkg results for requestID %s: %w", requestID, err)
+		return fmt.Errorf("HandleGetKeyShares: failed to get dkg result for requestID %s: %w", requestID, err)
 	}
 
 	keyshares := &KeyShares{}

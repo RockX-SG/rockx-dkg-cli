@@ -25,13 +25,10 @@ type DepositDataJson struct {
 
 func (h *CliHandler) HandleGetDepositData(c *cli.Context) error {
 	requestID := c.String("request-id")
-	if requestID == "" {
-		return fmt.Errorf("`request_id` not found")
-	}
 
 	results, err := h.DKGResultByRequestID(requestID)
 	if err != nil {
-		return err
+		return fmt.Errorf("HandleGetDepositData: failed to get dkg result for requestID %s: %w", requestID, err)
 	}
 
 	// all operators will have same validatorPK in their result
@@ -48,7 +45,7 @@ func (h *CliHandler) HandleGetDepositData(c *cli.Context) error {
 
 	_, depositData, err := types.GenerateETHDepositData(validatorPK, withdrawalCredentials, fork, types.DomainDeposit)
 	if err != nil {
-		return err
+		return fmt.Errorf("HandleGetDepositData: failed to generate eth deposit data: %w", err)
 	}
 
 	depositMsg := &phase0.DepositMessage{
