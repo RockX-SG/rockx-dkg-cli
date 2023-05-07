@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/RockX-SG/frost-dkg-demo/internal/utils"
 	"github.com/urfave/cli/v2"
 )
 
@@ -60,7 +61,7 @@ func (h *CliHandler) HandleGetKeyShares(c *cli.Context) error {
 
 	filename := fmt.Sprintf("keyshares-%d.json", time.Now().Unix())
 	fmt.Printf("writing keyshares to file: %s\n", filename)
-	return writeJSON(filename, keyshares)
+	return utils.WriteJSON(filename, keyshares)
 }
 
 // Convert a slice of strings to a slice of byte slices, where each string is converted to a byte slice

@@ -8,7 +8,6 @@ import (
 	"io"
 	"math/big"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/RockX-SG/frost-dkg-demo/internal/logger"
@@ -40,14 +39,13 @@ func New(logger *logger.Logger) *CliHandler {
 }
 
 func (h *CliHandler) DKGResultByRequestID(requestID string) (*DKGResult, error) {
-
 	log := h.logger.WithFields(logrus.Fields{"request-id": requestID})
-	log.Debug("fetching dkg results for keygen/resharing")
+	log.Debug("DKGResultByRequestID: fetching dkg results for keygen/resharing")
 
 	resp, err := h.client.Get(fmt.Sprintf("%s/data/%s", h.messengerAddr, requestID))
 	if err != nil {
 		log.Errorf("failed to request messenger server for dkg result: %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("DKGResultByRequestID: failed to request messenger server for dkg result %s", err.Error())
 	}
 	defer resp.Body.Close()
 
@@ -55,14 +53,14 @@ func (h *CliHandler) DKGResultByRequestID(requestID string) (*DKGResult, error) 
 		respBody, _ := io.ReadAll(resp.Body)
 		log.Errorf("failed to fetch keygen/resharing results with status %s", resp.Status)
 		log.Debugf("request failed with body %s", string(respBody))
-		return nil, fmt.Errorf("failed to fetch dkg result for request %s with code %d", requestID, resp.StatusCode)
+		return nil, fmt.Errorf("DKGResultByRequestID: failed to fetch dkg result for request %s with code %d", requestID, resp.StatusCode)
 	}
 
 	data := &messenger.DataStore{}
 	body, _ := io.ReadAll(resp.Body)
 	if err := json.Unmarshal(body, &data); err != nil {
 		log.Errorf("failed to parse response json: %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("DKGResultByRequestID: failed to parse dkg result from api response")
 	}
 
 	return formatResults(data), nil
@@ -79,13 +77,4 @@ func getRandRequestID() dkg.RequestID {
 		}
 	}
 	return requestID
-}
-
-func writeJSON(filepath string, data any) error {
-	file, err := os.Create(filepath)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	return json.NewEncoder(file).Encode(data)
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/RockX-SG/frost-dkg-demo/internal/utils"
 	"github.com/urfave/cli/v2"
 )
 
@@ -15,5 +16,5 @@ func (h *CliHandler) HandleGetData(c *cli.Context) error {
 	}
 	filepath := fmt.Sprintf("dkg_results_%s_%d.json", requestID, time.Now().Unix())
 	fmt.Printf("writing results to file: %s\n", filepath)
-	return writeJSON(filepath, results)
+	return utils.WriteJSON(filepath, results)
 }

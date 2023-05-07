@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/RockX-SG/frost-dkg-demo/internal/utils"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv-spec/types"
 	"github.com/urfave/cli/v2"
@@ -78,5 +79,5 @@ func (h *CliHandler) HandleGetDepositData(c *cli.Context) error {
 
 	filepath := fmt.Sprintf("deposit-data_%d.json", time.Now().UTC().Unix())
 	fmt.Printf("writing deposit data json to file %s\n", filepath)
-	return writeJSON(filepath, depositDataJson)
+	return utils.WriteJSON(filepath, depositDataJson)
 }
