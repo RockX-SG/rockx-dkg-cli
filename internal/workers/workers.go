@@ -2,7 +2,11 @@ package workers
 
 import (
 	"context"
+
+	"github.com/RockX-SG/frost-dkg-demo/internal/logger"
 )
+
+type Ctxlog string
 
 type Job struct {
 	ID string
@@ -12,12 +16,15 @@ type Job struct {
 type Runner struct {
 	incomingJobs chan *Job
 	jobs         map[string]context.CancelFunc
+
+	logger *logger.Logger
 }
 
-func NewRunner() *Runner {
+func NewRunner(logger *logger.Logger) *Runner {
 	return &Runner{
 		incomingJobs: make(chan *Job, 10),
 		jobs:         make(map[string]context.CancelFunc),
+		logger:       logger,
 	}
 }
 
@@ -27,7 +34,8 @@ func (r *Runner) AddJob(j *Job) {
 
 func (r *Runner) Run() {
 	for job := range r.incomingJobs {
-		ctx, cancel := context.WithCancel(context.Background())
+		ctxlog := context.WithValue(context.Background(), Ctxlog("logger"), r.logger)
+		ctx, cancel := context.WithCancel(ctxlog)
 		r.jobs[job.ID] = cancel
 		go job.Fn(&ctx)
 	}

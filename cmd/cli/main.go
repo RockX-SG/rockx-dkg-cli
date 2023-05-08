@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -10,8 +11,12 @@ import (
 )
 
 func main() {
+	basePath := "/var/log"
+	if os.Getenv("DKG_LOG_PATH") != "" {
+		basePath = os.Getenv("DKG_LOG_PATH")
+	}
 
-	logger := logger.New("dkg_cli.log")
+	logger := logger.New(fmt.Sprintf("%s/dkg_cli.log", basePath))
 	h := clihandler.New(logger)
 
 	app := &cli.App{

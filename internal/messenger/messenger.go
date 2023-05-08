@@ -7,16 +7,16 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
 
+	"github.com/RockX-SG/frost-dkg-demo/internal/logger"
+	"github.com/RockX-SG/frost-dkg-demo/internal/workers"
 	"github.com/bloxapp/ssv-spec/dkg"
 	"github.com/bloxapp/ssv-spec/dkg/frost"
 	"github.com/bloxapp/ssv-spec/types"
-	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -29,7 +29,11 @@ type Messenger struct {
 
 	Incoming chan *Message
 
-	logger *logrus.Logger
+	logger *logger.Logger
+}
+
+func (m *Messenger) WithLogger(logger *logger.Logger) {
+	m.logger = logger
 }
 
 type Topic struct {
@@ -58,6 +62,7 @@ type DataStore struct {
 func (m *Messenger) Publish(topicName string, data []byte) error {
 	tp, exist := m.Topics[topicName]
 	if !exist {
+		m.logger.Errorf("Publish: topic %s already exists", topicName)
 		return &ErrTopicNotFound{TopicName: topicName}
 	}
 
@@ -70,25 +75,32 @@ func (m *Messenger) ProcessIncomingMessageWorker(ctx *context.Context) {
 		tp, exist := m.Topics[msg.Topic]
 		if !exist {
 			var err = &ErrTopicNotFound{TopicName: msg.Topic}
-			log.Printf("Error: %s\n", err.Error())
+			m.logger.Errorf("ProcessIncomingMessageWorker: %w", err)
+			continue
 		}
 
 		ssvMsg := &types.SSVMessage{}
 		if err := ssvMsg.Decode(msg.Data); err != nil {
-			log.Printf("Error: %s\n", err.Error())
+			m.logger.Errorf("ProcessIncomingMessageWorker: %w", err)
+			continue
 		}
-
 		signedMsg := &dkg.SignedMessage{}
 		if err := signedMsg.Decode(ssvMsg.Data); err != nil {
-			log.Printf("Error: %s\n", err.Error())
+			m.logger.Errorf("ProcessIncomingMessageWorker: failed to decode signed message: %w", err)
+			continue
 		}
-
 		protocolMsg := &frost.ProtocolMsg{}
 		if err := protocolMsg.Decode(signedMsg.Message.Data); err != nil {
-			log.Printf("Error: %s\n", err.Error())
+			m.logger.Errorf("ProcessIncomingMessageWorker: failed to decode protocol message: %w", err)
+			continue
 		}
 
-		log.Printf("received message from %d for msgType %d round %d \n", signedMsg.Signer, signedMsg.Message.MsgType, protocolMsg.Round)
+		m.logger.Debugf(
+			"received message from %d for msgType %d round %d",
+			signedMsg.Signer,
+			signedMsg.Message.MsgType,
+			protocolMsg.Round,
+		)
 
 		for _, subscriber := range tp.Subscribers {
 			operatorID := strconv.Itoa(int(signedMsg.Signer))
@@ -105,6 +117,14 @@ const (
 )
 
 func (s *Subscriber) ProcessOutgoingMessageWorker(ctx *context.Context) {
+
+	log := (*ctx).Value(workers.Ctxlog("logger"))
+	if log == nil {
+		panic("logger not found in context")
+	}
+	logger := log.(*logger.Logger)
+	logger.Infof("ProcessOutgoingMessageWorker: logger loaded successfully")
+
 	for msg := range s.Outgoing {
 
 		h := sha256.Sum256(msg.Data)
@@ -128,13 +148,14 @@ func (s *Subscriber) ProcessOutgoingMessageWorker(ctx *context.Context) {
 		_, exist := s.SubscribesTo[msg.Topic]
 		if !exist {
 			var err = &ErrTopicNotFound{TopicName: msg.Topic}
-			log.Printf("Error: %s\n", err.Error())
+			logger.Errorf("ProcessOutgoingMessageWorker: %w", err)
 			continue
 		}
 
+		// TODO: replace this client
 		resp, err := http.Post(fmt.Sprintf("%s/consume", s.SrvAddr), "application/json", bytes.NewBuffer(msg.Data))
 		if err != nil {
-			log.Printf("Error: %s\n", err.Error())
+			logger.Errorf("ProcessOutgoingMessageWorker: %w", err)
 			continue
 		}
 
@@ -143,7 +164,9 @@ func (s *Subscriber) ProcessOutgoingMessageWorker(ctx *context.Context) {
 			s.Outgoing <- msg
 
 			err := fmt.Errorf("failed to publish message to the subscriber %s %v", s.Name, string(respbody))
-			log.Printf("Error: %s\n", err.Error())
+			logger.Errorf("ProcessOutgoingMessageWorker: %w", err)
+		} else {
+			logger.Infof("ProcessOutgoingMessageWorker: message sent to %s successfully", s.Name)
 		}
 		resp.Body.Close()
 	}

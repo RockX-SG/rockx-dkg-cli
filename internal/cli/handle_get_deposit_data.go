@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/RockX-SG/frost-dkg-demo/internal/utils"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/bloxapp/ssv-spec/types"
 	"github.com/urfave/cli/v2"
@@ -24,13 +25,10 @@ type DepositDataJson struct {
 
 func (h *CliHandler) HandleGetDepositData(c *cli.Context) error {
 	requestID := c.String("request-id")
-	if requestID == "" {
-		return fmt.Errorf("`request_id` not found")
-	}
 
 	results, err := h.DKGResultByRequestID(requestID)
 	if err != nil {
-		return err
+		return fmt.Errorf("HandleGetDepositData: failed to get dkg result for requestID %s: %w", requestID, err)
 	}
 
 	// all operators will have same validatorPK in their result
@@ -47,7 +45,7 @@ func (h *CliHandler) HandleGetDepositData(c *cli.Context) error {
 
 	_, depositData, err := types.GenerateETHDepositData(validatorPK, withdrawalCredentials, fork, types.DomainDeposit)
 	if err != nil {
-		return err
+		return fmt.Errorf("HandleGetDepositData: failed to generate eth deposit data: %w", err)
 	}
 
 	depositMsg := &phase0.DepositMessage{
@@ -78,5 +76,5 @@ func (h *CliHandler) HandleGetDepositData(c *cli.Context) error {
 
 	filepath := fmt.Sprintf("deposit-data_%d.json", time.Now().UTC().Unix())
 	fmt.Printf("writing deposit data json to file %s\n", filepath)
-	return writeJSON(filepath, depositDataJson)
+	return utils.WriteJSON(filepath, depositDataJson)
 }
