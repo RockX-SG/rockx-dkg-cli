@@ -4,3 +4,4 @@ keyshares-*
 deposit-data_*
 build/bin/*
 release/*
+*.log
