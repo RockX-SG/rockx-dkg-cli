@@ -13,7 +13,7 @@ Downloads
 1. Download the latest version of the cli tool from above page
 
 ```
-wget https://github.com/RockX-SG/rockx-dkg-cli/releases/download/0.2.3/rockx-dkg-cli.0.2.3.linux.amd64.tar.gz
+wget https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.3/rockx-dkg-cli.0.2.3.linux.amd64.tar.gz
 ```
 
 2. Extract the cli
