@@ -27,7 +27,9 @@ tar -xzvf rockx-dkg-cli.0.2.3.linux.amd64.tar.gz
 ```
 cp ./rockx-dkg-cli /usr/local/bin
 export MESSENGER_SRV_ADDR=https://dkg-messenger.rockx.com
+export DKG_LOG_PATH=.
 ```
+> `DKG_LOG_PATH` instructs the cli to store logs at this location under the filename `dkg_cli.log`. Make sure it is a location with permission to create files
 
 4. Perform DKG
 ```
