@@ -71,12 +71,10 @@ type ResharingRequest struct {
 }
 
 func (request *ResharingRequest) parseResharingRequest(c *cli.Context) error {
-	resharingRequest := ResharingRequest{
-		Operators:    make(map[types.OperatorID]string),
-		OperatorsOld: make(map[types.OperatorID]string),
-		Threshold:    c.Int("threshold"),
-		ValidatorPK:  c.String("validator-pk"),
-	}
+	request.Operators = make(map[types.OperatorID]string)
+	request.OperatorsOld = make(map[types.OperatorID]string)
+	request.Threshold = c.Int("threshold")
+	request.ValidatorPK = c.String("validator-pk")
 
 	operatorkv := c.StringSlice("operator")
 	for _, op := range operatorkv {
@@ -89,7 +87,7 @@ func (request *ResharingRequest) parseResharingRequest(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		resharingRequest.Operators[types.OperatorID(opID)] = pair[1]
+		request.Operators[types.OperatorID(opID)] = pair[1]
 	}
 
 	oldoperatorkv := c.StringSlice("old-operator")
@@ -103,7 +101,7 @@ func (request *ResharingRequest) parseResharingRequest(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		resharingRequest.OperatorsOld[types.OperatorID(opID)] = pair[1]
+		request.OperatorsOld[types.OperatorID(opID)] = pair[1]
 	}
 	return nil
 }

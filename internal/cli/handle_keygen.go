@@ -24,6 +24,7 @@ func (h *CliHandler) HandleKeygen(c *cli.Context) error {
 	requestID := getRandRequestID()
 	requestIDInHex := hex.EncodeToString(requestID[:])
 
+	fmt.Println("operators", keygenRequest.allOperators())
 	messengerClient := messenger.NewMessengerClient(messenger.MessengerAddrFromEnv())
 	if err := messengerClient.CreateTopic(requestIDInHex, keygenRequest.allOperators()); err != nil {
 		return fmt.Errorf("HandleKeygen: failed to create a new topic on messenger service: %w", err)
@@ -73,12 +74,11 @@ func (request *KeygenRequest) allOperators() []types.OperatorID {
 }
 
 func (request *KeygenRequest) parseKeygenRequest(c *cli.Context) error {
-	keygenRequest := KeygenRequest{
-		Operators:            make(map[types.OperatorID]string),
-		Threshold:            c.Int("threshold"),
-		WithdrawalCredential: c.String("withdrawal-credentials"),
-		ForkVersion:          c.String("fork-version"),
-	}
+	request.Operators = make(map[types.OperatorID]string)
+	request.Threshold = c.Int("threshold")
+	request.WithdrawalCredential = c.String("withdrawal-credentials")
+	request.ForkVersion = c.String("fork-version")
+
 	operatorkv := c.StringSlice("operator")
 	for _, op := range operatorkv {
 		op = strings.Trim(op, " ")
@@ -90,9 +90,8 @@ func (request *KeygenRequest) parseKeygenRequest(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		keygenRequest.Operators[types.OperatorID(opID)] = pair[1]
+		request.Operators[types.OperatorID(opID)] = pair[1]
 	}
-
 	return nil
 }
 
