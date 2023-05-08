@@ -4,8 +4,8 @@
 Downloads
 |Version|Link| os|arch|
 |-------|----|---|----|
-|0.2.2| https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.2/rockx-dkg-cli.0.2.2.darwin.arm64.tar.gz | darwin| arm64|
-|0.2.2| https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.2/rockx-dkg-cli.0.2.2.linux.amd64.tar.gz | linux| amd64|
+|0.2.3| https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.3/rockx-dkg-cli.0.2.3.darwin.arm64.tar.gz | darwin| arm64|
+|0.2.3| https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.3/rockx-dkg-cli.0.2.3.linux.amd64.tar.gz | linux| amd64|
 
 
 ### Installation (for os: darwin and arch: arm64)
@@ -13,7 +13,7 @@ Downloads
 1. Download the latest version of the cli tool from above page
 
 ```
-wget https://github.com/RockX-SG/rockx-dkg-cli/releases/download/0.2.2/rockx-dkg-cli.0.2.2.darwin.arm64.tar.gz
+wget https://github.com/RockX-SG/rockx-dkg-cli/releases/download/0.2.3/rockx-dkg-cli.0.2.3.linux.amd64.tar.gz
 ```
 
 2. Extract the cli
