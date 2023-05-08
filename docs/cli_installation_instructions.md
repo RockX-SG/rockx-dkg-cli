@@ -19,7 +19,7 @@ wget https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.3/rockx-dk
 2. Extract the cli
 
 ```
-tar -xzvf rockx-dkg-cli.0.2.2.darwin.arm64.tar.gz
+tar -xzvf rockx-dkg-cli.0.2.3.linux.amd64.tar.gz
 ```
 
 3. Move the file to your PATH and Set messenger service address for the cli
