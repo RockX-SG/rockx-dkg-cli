@@ -56,9 +56,9 @@ func (m *Messenger) HandleGetData() func(*gin.Context) {
 }
 
 func (m *Messenger) HandleStreamDKGOutput() func(*gin.Context) {
-	data := make(map[types.OperatorID]*dkg.SignedOutput)
 
 	return func(c *gin.Context) {
+		data := make(map[types.OperatorID]*dkg.SignedOutput)
 		requestID := c.Query("request_id")
 
 		body, _ := io.ReadAll(c.Request.Body)
@@ -76,9 +76,9 @@ func (m *Messenger) HandleStreamDKGOutput() func(*gin.Context) {
 }
 
 func (m *Messenger) HandleStreamDKGBlame() func(*gin.Context) {
-	data := new(dkg.BlameOutput)
 
 	return func(c *gin.Context) {
+		data := new(dkg.BlameOutput)
 		requestID := c.Query("request_id")
 
 		body, _ := io.ReadAll(c.Request.Body)
