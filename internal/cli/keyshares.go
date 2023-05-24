@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/RockX-SG/frost-dkg-demo/internal/storage"
@@ -72,14 +73,24 @@ func (ks *KeyShares) ParseDKGResult(result *DKGResult) error {
 		operatorIds = append(operatorIds, uint32(operatorID))
 	}
 
+	sort.SliceStable(operatorIds, func(i, j int) bool {
+		return operatorIds[i] < operatorIds[j]
+	})
+
+	sort.SliceStable(operatorData, func(i, j int) bool {
+		return operatorData[i].ID < operatorData[j].ID
+	})
+
 	shares := KeySharesKeys{
 		PublicKeys:    make([]string, 0),
 		EncryptedKeys: make([]string, 0),
 	}
 
-	for _, output := range result.Output {
-		shares.PublicKeys = append(shares.PublicKeys, fmt.Sprintf("0x%s", output.Data.SharePubKey))
-		shares.EncryptedKeys = append(shares.EncryptedKeys, output.Data.EncryptedShare)
+	for _, id := range operatorIds {
+		output := result.Output[types.OperatorID(id)]
+		shares.PublicKeys = append(shares.PublicKeys, "0x"+output.Data.SharePubKey)
+		encryptedShare, _ := hex.DecodeString(output.Data.EncryptedShare)
+		shares.EncryptedKeys = append(shares.EncryptedKeys, base64.StdEncoding.EncodeToString(encryptedShare))
 	}
 
 	data := KeySharesData{
@@ -92,7 +103,7 @@ func (ks *KeyShares) ParseDKGResult(result *DKGResult) error {
 		Readable: ReadablePayload{
 			PublicKey:   "0x" + result.Output[types.OperatorID(operatorIds[0])].Data.ValidatorPubKey,
 			OperatorIDs: operatorIds,
-			Shares:      sharesToBytes(data.Shares.PublicKeys, shares.EncryptedKeys),
+			Shares:      sharesToBytes(shares.PublicKeys, shares.EncryptedKeys),
 			Amount:      "Amount of SSV tokens to be deposited to your validator's cluster balance (mandatory only for 1st validator in a cluster)",
 			Cluster:     "The latest cluster snapshot data, obtained using the cluster-scanner tool. If this is the cluster's 1st validator then use - {0,0,0,0,0,false}",
 		},
