@@ -1,4 +1,4 @@
-VERSION = 0.2.3
+VERSION = 0.2.4
 GOBASE = $(shell pwd)
 GOBIN = $(GOBASE)/build/bin
 GOCMD = $(GOBASE)/cmd
@@ -50,6 +50,7 @@ test:
 clean:
 	rm deposit-data_*
 	rm dkg_results_*
+	rm keyshares_*
 	rm $(GOBIN)/*
 	rm *.log
 

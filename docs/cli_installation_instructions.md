@@ -4,8 +4,8 @@
 Downloads
 |Version|Link| os|arch|
 |-------|----|---|----|
-|0.2.3| https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.3/rockx-dkg-cli.0.2.3.darwin.arm64.tar.gz | darwin| arm64|
-|0.2.3| https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.3/rockx-dkg-cli.0.2.3.linux.amd64.tar.gz | linux| amd64|
+|0.2.4| https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.4/rockx-dkg-cli.0.2.4.darwin.arm64.tar.gz | darwin| arm64|
+|0.2.4| https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.4/rockx-dkg-cli.0.2.4.linux.amd64.tar.gz | linux| amd64|
 
 
 ### Installation (for os: darwin and arch: arm64)
@@ -13,13 +13,13 @@ Downloads
 1. Download the latest version of the cli tool from above page
 
 ```
-wget https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.3/rockx-dkg-cli.0.2.3.linux.amd64.tar.gz
+wget https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.4/rockx-dkg-cli.0.2.4.linux.amd64.tar.gz
 ```
 
 2. Extract the cli
 
 ```
-tar -xzvf rockx-dkg-cli.0.2.3.linux.amd64.tar.gz
+tar -xzvf rockx-dkg-cli.0.2.4.linux.amd64.tar.gz
 ```
 
 3. Move the file to your PATH and Set messenger service address for the cli
