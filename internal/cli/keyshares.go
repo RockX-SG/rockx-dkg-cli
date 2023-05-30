@@ -122,7 +122,7 @@ func sharesToBytes(publicKeys []string, privateKeys []string) string {
 	arrayEncryptedShares := bytes.Join(toArrayByteSlices(encryptedShares), []byte{})
 
 	// public keys hex encoded
-	pkHex := hex.EncodeToString(arrayPublicKeys)
+	pkHex := "0x" + hex.EncodeToString(arrayPublicKeys)
 	// length of the public keys (hex), hex encoded
 	pkHexLength := fmt.Sprintf("%04x", len(pkHex))
 
