@@ -76,5 +76,5 @@ func (h *CliHandler) HandleGetDepositData(c *cli.Context) error {
 
 	filepath := fmt.Sprintf("deposit-data_%d.json", time.Now().UTC().Unix())
 	fmt.Printf("writing deposit data json to file %s\n", filepath)
-	return utils.WriteJSON(filepath, depositDataJson)
+	return utils.WriteJSON(filepath, []DepositDataJson{depositDataJson})
 }
