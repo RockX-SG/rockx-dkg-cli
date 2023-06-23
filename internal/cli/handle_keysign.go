@@ -13,24 +13,8 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func (h *CliHandler) HandleKeySign(c *cli.Context) error {
-
-	keygenRequestID := c.String("keygen-request-id")
-	dkgResult, err := h.DKGResultByRequestID(keygenRequestID)
-	if err != nil {
-		return fmt.Errorf("HandleKeySign: failed to get dkg result for requestID %s: %w", keygenRequestID, err)
-	}
-	vk, err := dkgResult.GetValidatorPK()
-	if err != nil {
-		return fmt.Errorf("HandleKeySign: failed to get validatorPK from DKG result: %w", err)
-	}
-
-	ownerAddress := c.String("owner-address")
-	ownerNonce := c.Int("owner-nonce")
-	signingRoot := []byte(fmt.Sprintf("%s:%d", ownerAddress, ownerNonce))
-
+func (h *CliHandler) GenerateSignature(c *cli.Context, vk types.ValidatorPK, signingRoot []byte) (dkg.RequestID, error) {
 	requestID := getRandRequestID()
-	requestIDInHex := hex.EncodeToString(requestID[:])
 
 	keySign := dkg.KeySign{
 		ValidatorPK: vk,
@@ -40,12 +24,12 @@ func (h *CliHandler) HandleKeySign(c *cli.Context) error {
 
 	initBytes, err := initMsgForKeySign(requestID, keySignBytes)
 	if err != nil {
-		return fmt.Errorf("HandleKeySign: failed to generate init msg for KeySign: %w", err)
+		return [24]byte{}, fmt.Errorf("HandleKeySign: failed to generate init msg for KeySign: %w", err)
 	}
 
 	operators, err := parseOperatorList(c)
 	if err != nil {
-		return fmt.Errorf("HandleKeySign: failed to parse operator list from command: %w", err)
+		return [24]byte{}, fmt.Errorf("HandleKeySign: failed to parse operator list from command: %w", err)
 	}
 
 	ol := make([]types.OperatorID, 0)
@@ -54,18 +38,17 @@ func (h *CliHandler) HandleKeySign(c *cli.Context) error {
 	}
 
 	messengerClient := messenger.NewMessengerClient(messenger.MessengerAddrFromEnv())
-	if err := messengerClient.CreateTopic(requestIDInHex, ol); err != nil {
-		return fmt.Errorf("HandleKeygen: failed to create a new topic on messenger service: %w", err)
+	if err := messengerClient.CreateTopic(hex.EncodeToString(requestID[:]), ol); err != nil {
+		return [24]byte{}, fmt.Errorf("HandleKeygen: failed to create a new topic on messenger service: %w", err)
 	}
 
 	for operatorID, addr := range operators {
 		if err := h.sendKeySignMsg(operatorID, addr, initBytes); err != nil {
-			return fmt.Errorf("HandleKeySign: failed to send init message to operatorID %d: %w", operatorID, err)
+			return [24]byte{}, fmt.Errorf("HandleKeySign: failed to send init message to operatorID %d: %w", operatorID, err)
 		}
 	}
 
-	fmt.Printf("keysign init request sent with ID: %s\n", requestIDInHex)
-	return nil
+	return requestID, nil
 }
 
 func (h *CliHandler) sendKeySignMsg(operatorID types.OperatorID, addr string, data []byte) error {

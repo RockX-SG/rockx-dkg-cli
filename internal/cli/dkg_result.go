@@ -56,6 +56,25 @@ func (r *DKGResult) GetValidatorPK() (types.ValidatorPK, error) {
 	return vk, nil
 }
 
+func (r *DKGResult) GetSignatureFromKeySign() (string, error) {
+	var sig []byte
+	for _, output := range r.Output {
+		sigBytes, err := hex.DecodeString(output.KeySignData.Signature)
+		if err != nil {
+			return "", fmt.Errorf("GetValidatorPK: failed to decode validator PK from its hex value: %w", err)
+		}
+
+		if sig != nil {
+			if !bytes.Equal(sig, sigBytes) {
+				return "", fmt.Errorf("GetValidatorPK: invalid dkg result, vk from all operators are not equal")
+			}
+		}
+
+		sig = sigBytes
+	}
+	return hex.EncodeToString(sig), nil
+}
+
 func formatResults(data *messenger.DataStore) *DKGResult {
 	if data.BlameOutput != nil {
 		return formatBlameResults(data.BlameOutput)

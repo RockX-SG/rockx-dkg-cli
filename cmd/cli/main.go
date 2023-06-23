@@ -113,23 +113,10 @@ func main() {
 						Usage:    "request id for keygen/resharing",
 						Required: true,
 					},
-				},
-			},
-			{
-				Name:    "keysign",
-				Aliases: []string{"ks"},
-				Action:  h.HandleKeySign,
-				Flags: []cli.Flag{
 					&cli.StringSliceFlag{
 						Name:     "operator",
 						Aliases:  []string{"o"},
 						Usage:    "operator key-value pair",
-						Required: true,
-					},
-					&cli.StringFlag{
-						Name:     "keygen-request-id",
-						Aliases:  []string{"req"},
-						Usage:    "request id from a previous keygen/resharing",
 						Required: true,
 					},
 					&cli.StringFlag{

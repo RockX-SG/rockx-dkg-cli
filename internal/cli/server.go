@@ -19,7 +19,6 @@ import (
 
 type Handler interface {
 	HandleKeygen(c *cli.Context) error
-	HandleKeySign(c *cli.Context) error
 	HandleResharing(c *cli.Context) error
 	HandleGetData(c *cli.Context) error
 	HandleGetDepositData(c *cli.Context) error

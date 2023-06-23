@@ -22,12 +22,11 @@ type KeyShares struct {
 type KeySharesData struct {
 	PublicKey string         `json:"publicKey"`
 	Operators []OperatorData `json:"operators"`
-	Shares    KeySharesKeys  `json:"shares"`
 }
 
 type OperatorData struct {
-	ID        uint32 `json:"id"`
-	PublicKey string `json:"publicKey"`
+	ID          uint32 `json:"id"`
+	OperatorKey string `json:"operatorKey"`
 }
 
 type KeySharesKeys struct {
@@ -47,14 +46,14 @@ type ReadablePayload struct {
 	Cluster     string   `json:"cluster"`
 }
 
-func (ks *KeyShares) ParseDKGResult(result *DKGResult) error {
+func (ks *KeyShares) GenerateKeyshareV4(result *DKGResult, ownerPrefix string) error {
 
 	if result.Blame != nil {
-		return fmt.Errorf("ParseDKGResult: result contains blame output")
+		return fmt.Errorf("ParseDKGResultV4: result contains blame output")
 	}
 
 	if len(result.Output) == 0 {
-		return fmt.Errorf("ParseDKGResult: dkg result is empty")
+		return fmt.Errorf("ParseDKGResultV4: dkg result is empty")
 	}
 
 	operatorData := make([]OperatorData, 0)
@@ -63,11 +62,11 @@ func (ks *KeyShares) ParseDKGResult(result *DKGResult) error {
 	for operatorID := range result.Output {
 		operator, err := storage.GetOperatorFromRegistryByID(operatorID)
 		if err != nil {
-			return fmt.Errorf("ParseDKGResult: failed to get operator %d from operator registry: %w", operatorID, err)
+			return fmt.Errorf("ParseDKGResultV4: failed to get operator %d from operator registry: %w", operatorID, err)
 		}
 		operatorData = append(operatorData, OperatorData{
-			ID:        uint32(operatorID),
-			PublicKey: operator.PublicKey,
+			ID:          uint32(operatorID),
+			OperatorKey: operator.PublicKey,
 		})
 
 		operatorIds = append(operatorIds, uint32(operatorID))
@@ -96,42 +95,31 @@ func (ks *KeyShares) ParseDKGResult(result *DKGResult) error {
 	data := KeySharesData{
 		PublicKey: "0x" + result.Output[types.OperatorID(operatorIds[0])].Data.ValidatorPubKey,
 		Operators: operatorData,
-		Shares:    shares,
 	}
 
 	payload := KeySharesPayload{
 		Readable: ReadablePayload{
 			PublicKey:   "0x" + result.Output[types.OperatorID(operatorIds[0])].Data.ValidatorPubKey,
 			OperatorIDs: operatorIds,
-			Shares:      sharesToBytes(shares.PublicKeys, shares.EncryptedKeys),
+			Shares:      sharesToBytes(shares.PublicKeys, shares.EncryptedKeys, ownerPrefix),
 			Amount:      "Amount of SSV tokens to be deposited to your validator's cluster balance (mandatory only for 1st validator in a cluster)",
 			Cluster:     "The latest cluster snapshot data, obtained using the cluster-scanner tool. If this is the cluster's 1st validator then use - {0,0,0,0,0,false}",
 		},
 	}
 
-	ks.Version = "v3"
+	ks.Version = "v4"
 	ks.Data = data
 	ks.Payload = payload
 	ks.CreatedAt = time.Now().UTC()
 	return nil
 }
 
-func sharesToBytes(publicKeys []string, privateKeys []string) string {
+func sharesToBytes(publicKeys []string, privateKeys []string, prefix string) string {
 	encryptedShares, _ := decodeEncryptedShares(privateKeys)
 	arrayPublicKeys := bytes.Join(toArrayByteSlices(publicKeys), []byte{})
 	arrayEncryptedShares := bytes.Join(toArrayByteSlices(encryptedShares), []byte{})
-
-	// public keys hex encoded
-	pkHex := "0x" + hex.EncodeToString(arrayPublicKeys)
-	// length of the public keys (hex), hex encoded
-	pkHexLength := fmt.Sprintf("%04x", len(pkHex))
-
-	// join arrays
 	pkPsBytes := append(arrayPublicKeys, arrayEncryptedShares...)
-
-	// add length of the public keys at the beginning
-	// this is the variable that is sent to the contract as bytes, prefixed with 0x
-	return "0x" + pkHexLength + hex.EncodeToString(pkPsBytes)
+	return "0x" + prefix + hex.EncodeToString(pkPsBytes)
 }
 
 func decodeEncryptedShares(encodedEncryptedShares []string) ([]string, error) {
