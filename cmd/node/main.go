@@ -14,6 +14,7 @@ import (
 
 	"github.com/bloxapp/ssv-spec/dkg"
 	"github.com/bloxapp/ssv-spec/dkg/frost"
+	"github.com/bloxapp/ssv-spec/dkg/keysign"
 	"github.com/bloxapp/ssv-spec/types"
 	"github.com/dgraph-io/badger/v3"
 	"github.com/gin-gonic/gin"
@@ -52,6 +53,7 @@ func main() {
 	config := &dkg.Config{
 		KeygenProtocol:      frost.New,
 		ReshareProtocol:     frost.NewResharing,
+		KeySign:             keysign.NewSignature,
 		Network:             network,
 		Signer:              signer,
 		Storage:             storage,

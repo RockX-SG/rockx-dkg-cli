@@ -74,25 +74,36 @@ func (request *KeygenRequest) allOperators() []types.OperatorID {
 }
 
 func (request *KeygenRequest) parseKeygenRequest(c *cli.Context) error {
-	request.Operators = make(map[types.OperatorID]string)
+	operators, err := parseOperatorList(c)
+	if err != nil {
+		return err
+	}
+
+	request.Operators = operators
 	request.Threshold = c.Int("threshold")
 	request.WithdrawalCredential = c.String("withdrawal-credentials")
 	request.ForkVersion = c.String("fork-version")
-
-	operatorkv := c.StringSlice("operator")
-	for _, op := range operatorkv {
-		op = strings.Trim(op, " ")
-		pair := strings.Split(op, "=")
-		if len(pair) != 2 {
-			return fmt.Errorf("operator %s is not in the form of key=value", op)
-		}
-		opID, err := strconv.Atoi(pair[0])
-		if err != nil {
-			return err
-		}
-		request.Operators[types.OperatorID(opID)] = pair[1]
-	}
 	return nil
+}
+
+func parseOperatorList(c *cli.Context) (map[types.OperatorID]string, error) {
+	operators := make(map[types.OperatorID]string)
+	for _, o := range c.StringSlice("operator") {
+
+		operator := strings.Trim(o, " ")
+
+		pair := strings.Split(operator, "=")
+		if len(pair) != 2 {
+			return nil, fmt.Errorf("operator %s is not in the form of key=value", operator)
+		}
+
+		operatorID, err := strconv.Atoi(pair[0])
+		if err != nil {
+			return nil, err
+		}
+		operators[types.OperatorID(operatorID)] = pair[1]
+	}
+	return operators, nil
 }
 
 func (request *KeygenRequest) initMsgForKeygen(requestID dkg.RequestID) ([]byte, error) {

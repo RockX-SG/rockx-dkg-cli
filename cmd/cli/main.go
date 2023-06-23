@@ -90,7 +90,7 @@ func main() {
 			{
 				Name:    "get-dkg-results",
 				Aliases: []string{"gr"},
-				Usage:   "get validator-pk and key shares of all operators",
+				Usage:   "get validator-pk and key shares data for all operators",
 				Action:  h.HandleGetData,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
@@ -104,13 +104,44 @@ func main() {
 			{
 				Name:    "get-keyshares",
 				Aliases: []string{"gks"},
-				Usage:   "get keyshares for registering the validator on ssv UI",
+				Usage:   "generates a keyshare for registering the validator on ssv UI",
 				Action:  h.HandleGetKeyShares,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:     "request-id",
 						Aliases:  []string{"req"},
 						Usage:    "request id for keygen/resharing",
+						Required: true,
+					},
+				},
+			},
+			{
+				Name:    "keysign",
+				Aliases: []string{"ks"},
+				Action:  h.HandleKeySign,
+				Flags: []cli.Flag{
+					&cli.StringSliceFlag{
+						Name:     "operator",
+						Aliases:  []string{"o"},
+						Usage:    "operator key-value pair",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "keygen-request-id",
+						Aliases:  []string{"req"},
+						Usage:    "request id from a previous keygen/resharing",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "owner-address",
+						Aliases:  []string{"oa"},
+						Usage:    "The cluster owner address (in the SSV contract)",
+						Required: true,
+					},
+					&cli.IntFlag{
+						Name:     "owner-nonce",
+						Aliases:  []string{"on"},
+						Usage:    "The validator registration nonce of the account (owner address) within the SSV contract (increments after each validator registration), obtained using the ssv-scanner tool.",
 						Required: true,
 					},
 				},

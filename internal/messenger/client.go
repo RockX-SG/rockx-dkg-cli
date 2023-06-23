@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -49,7 +50,11 @@ func (cl *Client) StreamDKGOutput(output map[types.OperatorID]*dkg.SignedOutput)
 
 	// assuming all signed output have same identifier. skipping validation here
 	for _, output := range output {
-		requestID = hex.EncodeToString(output.Data.RequestID[:])
+		if output.Data != nil {
+			requestID = hex.EncodeToString(output.Data.RequestID[:])
+		} else if output.KeySignData != nil {
+			requestID = hex.EncodeToString(output.KeySignData.RequestID[:])
+		}
 	}
 
 	data, err := json.Marshal(output)
@@ -158,4 +163,21 @@ func (cl *Client) CreateTopic(requestID string, l []types.OperatorID) error {
 		return fmt.Errorf("failed to call createTopic on messenger")
 	}
 	return nil
+}
+
+func (cl *Client) GetTopic(topicName string) (*Topic, error) {
+	resp, err := cl.client.Get(fmt.Sprintf("%s/topics/%s", cl.SrvAddr, topicName))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to call createTopic on messenger")
+	}
+	topic := &Topic{}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return topic, json.Unmarshal(body, topic)
 }
