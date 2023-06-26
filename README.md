@@ -75,8 +75,8 @@ USAGE:
 COMMANDS:
    keygen, k                   start keygen process
    resharing, r                start resharing process
-   get-dkg-results, gr         get validator-pk and key shares of all operators
-   get-keyshares, gr           get keyshares for registering the validator on ssv UI
+   get-dkg-results, gr         get validator-pk and key shares data for all operators
+   get-keyshares, gks          generates a keyshare for registering the validator on ssv UI
    generate-deposit-data, gdd  generate deposit data in json format
    help, h                     Shows a list of commands or help for one command
 
@@ -100,7 +100,7 @@ rockx-dkg-cli keygen --operator 1="http://0.0.0.0:8081" --operator 2="http://0.0
 
 The CLI will return a request ID in the following format:
 ```
-keygen init request sent with ID: a6e2cb702e163a328c0ab80b29a4d444feb3ac948088462f
+keygen init request sent with ID: 9a45c1f30a9896c5263508c2a132ebf7fc7e3c37ab86c74b
 ```
 
 ### Resharing
@@ -130,7 +130,7 @@ To view the results of a key generation process (or resharing), use the request 
 
 ##### Example:
 ```
-rockx-dkg-cli get-dkg-results --request-id c9e8c174060ee45bf86aaea3e409d8ee48a8fcb3d008fd18
+rockx-dkg-cli get-dkg-results --request-id 9a45c1f30a9896c5263508c2a132ebf7fc7e3c37ab86c74b
 ```
 This will write the results of the key generation/resharing process with the given request ID to a file of format `dkg_results_<request_id>_<timestamp>.json`
 
@@ -142,11 +142,14 @@ writing results to file: dkg_results_c9e8c174060ee45bf86aaea3e409d8ee48a8fcb3d00
 To generate keyshares file to be uploaded to SSV V3 UI for registering validater, `get-keyshares` command is used
 
 ##### Command Options
---request-id: request id generated from calling keygen or resharing command
+--request-id value, --req value    request id for keygen/resharing
+--operator value, -o value         operator key-value pair
+--owner-address value, --oa value  The cluster owner address (in the SSV contract)
+--owner-nonce value, --on value    The validator registration nonce of the account (owner address) within the SSV contract (increments after each validator registration), obtained using the ssv-scanner tool. (default: 0)
 
 ##### Example:
 ```
-rockx-dkg-cli get-keyshares --request-id c9e8c174060ee45bf86aaea3e409d8ee48a8fcb3d008fd18
+rockx-dkg-cli get-keyshares --operator 1="http://0.0.0.0:8081" --operator 2="http://0.0.0.0:8082" --operator 3="http://0.0.0.0:8083" --operator 4="http://0.0.0.0:8084" --owner-address  0x1d2f14d2dffee594b4093d42e4bc1b0ea55e8aa7 --owner-nonce 999 --request-id 9a45c1f30a9896c5263508c2a132ebf7fc7e3c37ab86c74b
 ```
 This will write the results of the key generation/resharing process with the given request ID to a file of format `keyshares-<timestamp>.json`
 
@@ -164,7 +167,7 @@ To generate deposit data run the command `generate-deposit-data` from the cli. I
 
 #### Example:
 ```
-rockx-dkg-cli generate-deposit-data --withdrawal-credentials "0100000000000000000000001d2f14d2dffee594b4093d42e4bc1b0ea55e8aa7" --fork-version "prater" --request-id a6e2cb702e163a328c0ab80b29a4d444feb3ac948088462f
+rockx-dkg-cli generate-deposit-data --withdrawal-credentials "0100000000000000000000001d2f14d2dffee594b4093d42e4bc1b0ea55e8aa7" --fork-version "prater" --request-id 9a45c1f30a9896c5263508c2a132ebf7fc7e3c37ab86c74b
 ```
 
 The generated file can be verified at https://goerli.launchpad.ethereum.org/en/overview
@@ -178,7 +181,7 @@ make build_verify
 # Run verify tool
 # ./build/bin/verify <fork_version> <validator_public_key> <deposit_data_sig> <withdrawal credentials>
 
-./build/bin/verify prater 87d7a269ec845bd363fd2c6b2e8e61d5314725d5456ca5c4c8397d33d3052bb2c641e50ee78939f9deed429dff4f48ad 8ea5d0dddec9aa797fbb624c5732ea47fea89cc63adb391e15892e7b849a86edc93de80bace9cc06d85243d92c718fbb0c2cef9a8f5dd61f7af534ff1c211966fa581605410ea5bc13848a52626a612d690d5f8aabc80c0b619be2ef785ed88d 0100000000000000000000001d2f14d2dffee594b4093d42e4bc1b0ea55e8aa7
+./build/bin/verify prater 91d5dfe9e2357e291bf8286d16ab501dab48e75f2a82b5f81c4acc88f8e84f228719d4a132e414f3746d071537e04d84 887caab77686fce13407f9e02de9db029344d31ffbcc4bd68d0d4248c969c6e19b0ea297e42ee82b02db8f95e14dd743179400eef4b58af7b1bb97cc78d1a7984000a233657cfe65e665a9d4762243229c83a8164767e7fd224cfa4e2bbdd821 0100000000000000000000001d2f14d2dffee594b4093d42e4bc1b0ea55e8aa7
 
 # Output
 # signature verification succeeded
