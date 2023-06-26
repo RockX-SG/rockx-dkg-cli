@@ -16,9 +16,9 @@ build_verify:
 	go build -o $(GOBIN)/verify  $(GOCMD)/verify/main.go
 
 release_darwin_arm64:
-	GOOS=darwin GOARCH=arm64 go build -o $(GOBIN)/darwin_arm64/rockx-dkg-messenger  $(GOCMD)/messenger/main.go
-	GOOS=darwin GOARCH=arm64 go build -o $(GOBIN)/darwin_arm64/rockx-dkg-node  $(GOCMD)/node/main.go $(GOCMD)/node/app_params.go
-	GOOS=darwin GOARCH=arm64 go build -o $(GOBIN)/darwin_arm64/rockx-dkg-cli  $(GOCMD)/cli/main.go
+	GOOS=darwin GOARCH=arm64 go build -ldflags "-X main.version=$(VERSION) -s -w" -o $(GOBIN)/darwin_arm64/rockx-dkg-messenger  $(GOCMD)/messenger/main.go
+	GOOS=darwin GOARCH=arm64 go build -ldflags "-X main.version=$(VERSION) -s -w" -o $(GOBIN)/darwin_arm64/rockx-dkg-node  $(GOCMD)/node/main.go $(GOCMD)/node/app_params.go
+	GOOS=darwin GOARCH=arm64 go build -ldflags "-X main.version=$(VERSION) -s -w" -o $(GOBIN)/darwin_arm64/rockx-dkg-cli  $(GOCMD)/cli/main.go
 	
 	mkdir -p $(GOBASE)/release/$(VERSION)
 
@@ -29,9 +29,9 @@ release_darwin_arm64:
 	cd $(GOBASE)
 
 release_linux_amd64:
-	GOOS=linux GOARCH=amd64 go build -o $(GOBIN)/linux_amd64/rockx-dkg-messenger  $(GOCMD)/messenger/main.go
-	GOOS=linux GOARCH=amd64 go build -o $(GOBIN)/linux_amd64/rockx-dkg-node  $(GOCMD)/node/main.go $(GOCMD)/node/app_params.go
-	GOOS=linux GOARCH=amd64 go build -o $(GOBIN)/linux_amd64/rockx-dkg-cli  $(GOCMD)/cli/main.go
+	GOOS=linux GOARCH=amd64 go build -ldflags "-X main.version=$(VERSION) -s -w" -o $(GOBIN)/linux_amd64/rockx-dkg-messenger  $(GOCMD)/messenger/main.go
+	GOOS=linux GOARCH=amd64 go build -ldflags "-X main.version=$(VERSION) -s -w" -o $(GOBIN)/linux_amd64/rockx-dkg-node  $(GOCMD)/node/main.go $(GOCMD)/node/app_params.go
+	GOOS=linux GOARCH=amd64 go build -ldflags "-X main.version=$(VERSION) -s -w" -o $(GOBIN)/linux_amd64/rockx-dkg-cli  $(GOCMD)/cli/main.go
 	
 	mkdir -p $(GOBASE)/release/$(VERSION)
 
