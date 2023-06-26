@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"strconv"
 
@@ -19,6 +20,8 @@ import (
 	"github.com/dgraph-io/badger/v3"
 	"github.com/gin-gonic/gin"
 )
+
+var version string
 
 func init() {
 	types.InitBLS()
@@ -86,6 +89,12 @@ func main() {
 
 	// get dkg results
 	r.GET("/dkg_results/:vk", h.HandleGetDKGResults(dkgnode))
+
+	r.GET("/version", func(ctx *gin.Context) {
+		ctx.JSON(http.StatusOK, gin.H{
+			"version": version,
+		})
+	})
 
 	panic(r.Run(params.HttpAddress))
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/RockX-SG/frost-dkg-demo/internal/logger"
@@ -11,6 +12,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
+
+var version string
 
 func main() {
 	log := logger.New("/var/log/dkg_messenger.log")
@@ -66,4 +69,10 @@ func setRoutes(r *gin.Engine, m *messenger.Messenger, runner *workers.Runner) {
 	r.POST("/stream/dkgoutput", m.HandleStreamDKGOutput())
 	r.POST("/stream/dkgblame", m.HandleStreamDKGBlame())
 	r.GET("/data/:request_id", m.HandleGetData())
+
+	r.GET("/version", func(ctx *gin.Context) {
+		ctx.JSON(http.StatusOK, gin.H{
+			"version": version,
+		})
+	})
 }

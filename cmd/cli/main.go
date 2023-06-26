@@ -10,6 +10,8 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+var version string
+
 func main() {
 	basePath := "/var/log"
 	if os.Getenv("DKG_LOG_PATH") != "" {
@@ -157,6 +159,41 @@ func main() {
 						Usage:    "fork version",
 						Required: true,
 					},
+				},
+			},
+			{
+				Name:    "generate-deposit-data",
+				Aliases: []string{"gdd"},
+				Usage:   "generate deposit data in json format",
+				Action:  h.HandleGetDepositData,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "request-id",
+						Aliases:  []string{"req"},
+						Usage:    "request id for keygen/resharing",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "withdrawal-credentials",
+						Aliases:  []string{"w"},
+						Usage:    "withdrawal credential",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "fork-version",
+						Aliases:  []string{"f"},
+						Usage:    "fork version",
+						Required: true,
+					},
+				},
+			},
+			{
+				Name:    "version",
+				Aliases: []string{"v"},
+				Usage:   "cli version",
+				Action: func(ctx *cli.Context) error {
+					fmt.Println(version)
+					return nil
 				},
 			},
 		},
