@@ -34,10 +34,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+const serviceName = "messenger"
+
 var version string
 
 func main() {
-	log := logger.New("/var/log/dkg_messenger.log")
+	log := logger.New(serviceName)
 
 	m := &messenger.Messenger{
 		Topics: map[string]*messenger.Topic{

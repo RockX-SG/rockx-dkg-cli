@@ -26,17 +26,17 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/RockX-SG/frost-dkg-demo/internal/logger"
 	"github.com/bloxapp/ssv-spec/dkg"
 	"github.com/bloxapp/ssv-spec/types"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 type ApiHandler struct {
-	logger *logger.Logger
+	logger *logrus.Logger
 }
 
-func New(logger *logger.Logger) *ApiHandler {
+func New(logger *logrus.Logger) *ApiHandler {
 	return &ApiHandler{logger: logger}
 }
 

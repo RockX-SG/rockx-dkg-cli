@@ -45,7 +45,6 @@ func (h *CliHandler) HandleKeygen(c *cli.Context) error {
 	requestID := getRandRequestID()
 	requestIDInHex := hex.EncodeToString(requestID[:])
 
-	fmt.Println("operators", keygenRequest.allOperators())
 	messengerClient := messenger.NewMessengerClient(messenger.MessengerAddrFromEnv())
 	if err := messengerClient.CreateTopic(requestIDInHex, keygenRequest.allOperators()); err != nil {
 		return fmt.Errorf("HandleKeygen: failed to create a new topic on messenger service: %w", err)

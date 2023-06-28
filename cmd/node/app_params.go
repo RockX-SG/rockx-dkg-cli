@@ -24,7 +24,6 @@ package main
 import (
 	"crypto/ecdsa"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 
@@ -84,7 +83,7 @@ func (params *AppParams) loadKeystorePassword() {
 }
 
 func (params *AppParams) loadDecryptedPrivateKey() (*ecdsa.PrivateKey, error) {
-	keyJSON, err := ioutil.ReadFile(params.KeystoreFilePath)
+	keyJSON, err := os.ReadFile(params.KeystoreFilePath)
 	if err != nil {
 		return nil, err
 	}

@@ -33,11 +33,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/RockX-SG/frost-dkg-demo/internal/logger"
 	"github.com/RockX-SG/frost-dkg-demo/internal/workers"
 	"github.com/bloxapp/ssv-spec/dkg"
 	"github.com/bloxapp/ssv-spec/dkg/frost"
 	"github.com/bloxapp/ssv-spec/types"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -50,10 +50,10 @@ type Messenger struct {
 
 	Incoming chan *Message
 
-	logger *logger.Logger
+	logger *logrus.Logger
 }
 
-func (m *Messenger) WithLogger(logger *logger.Logger) {
+func (m *Messenger) WithLogger(logger *logrus.Logger) {
 	m.logger = logger
 }
 
@@ -143,7 +143,7 @@ func (s *Subscriber) ProcessOutgoingMessageWorker(ctx *context.Context) {
 	if log == nil {
 		panic("logger not found in context")
 	}
-	logger := log.(*logger.Logger)
+	logger := log.(*logrus.Logger)
 	logger.Infof("ProcessOutgoingMessageWorker: logger loaded successfully")
 
 	for msg := range s.Outgoing {
