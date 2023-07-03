@@ -11,6 +11,7 @@ USE_HARDCODED_OPERATORS=false
 ```
 
 > Note: keep USE_HARDCODED_OPERATORS=false to use SSV operator registry instead of hardcoded values
+> Note: NODE_BROADCAST_ADDR is the public ip and port of the instance running this DKG node eg: http://34.143.199.161:8080 
 
 
 ### Docker command to run the containers
