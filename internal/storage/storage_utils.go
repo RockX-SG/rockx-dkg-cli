@@ -22,7 +22,6 @@
 package storage
 
 import (
-	"crypto/ecdsa"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/hex"
@@ -35,7 +34,6 @@ import (
 
 var (
 	DKGOperators = map[types.OperatorID]struct {
-		SK            *ecdsa.PrivateKey
 		ETHAddress    common.Address
 		EncryptionKey *rsa.PrivateKey
 	}{

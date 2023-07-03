@@ -22,35 +22,32 @@
 package main
 
 import (
-	"crypto/ecdsa"
+	"crypto/rsa"
+	"encoding/base64"
 	"fmt"
 	"os"
 	"strconv"
 
 	"github.com/bloxapp/ssv-spec/types"
-	"github.com/ethereum/go-ethereum/accounts/keystore"
 )
 
 type AppParams struct {
-	OperatorID       types.OperatorID
-	HttpAddress      string
-	KeystoreFilePath string
-	keystorePassword string
+	OperatorID         types.OperatorID
+	HttpAddress        string
+	OperatorPrivateKey *rsa.PrivateKey
 }
 
-func (params *AppParams) loadFromEnv() {
+func (params *AppParams) loadFromEnv() error {
 	params.loadOperatorID()
 	params.loadHttpAddress()
-	params.loadKeystoreFilePath()
-	params.loadKeystorePassword()
+	return params.loadOperatorPrivateKey()
 }
 
 func (params *AppParams) print() string {
 	return fmt.Sprintf(
-		"operatorID=%d http_addr=%s keystore_filepath=%s",
+		"operatorID=%d http_addr=%s",
 		params.OperatorID,
 		params.HttpAddress,
-		params.KeystoreFilePath,
 	)
 }
 
@@ -70,26 +67,19 @@ func (params *AppParams) loadHttpAddress() {
 	params.HttpAddress = nodeAddr
 }
 
-func (params *AppParams) loadKeystoreFilePath() {
-	keystoreFilePath := os.Getenv("KEYSTORE_FILE_PATH")
-	if keystoreFilePath == "" {
-		keystoreFilePath = "keystore.json"
+func (params *AppParams) loadOperatorPrivateKey() error {
+	encodedKey := os.Getenv("OPERATOR_PRIVATE_KEY")
+	if encodedKey == "" {
+		return fmt.Errorf("missing operator private key in app env")
 	}
-	params.KeystoreFilePath = keystoreFilePath
-}
-
-func (params *AppParams) loadKeystorePassword() {
-	params.keystorePassword = os.Getenv("KEYSTORE_PASSWORD")
-}
-
-func (params *AppParams) loadDecryptedPrivateKey() (*ecdsa.PrivateKey, error) {
-	keyJSON, err := os.ReadFile(params.KeystoreFilePath)
+	decodedKey, err := base64.StdEncoding.DecodeString(encodedKey)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("failed to decode base64 encoded operator private key: %w", err)
 	}
-	key, err := keystore.DecryptKey(keyJSON, params.keystorePassword)
+	operatorPrivateKey, err := types.PemToPrivateKey(decodedKey)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("failed to convert pem block to rsa private key %w", err)
 	}
-	return key.PrivateKey, nil
+	params.OperatorPrivateKey = operatorPrivateKey
+	return nil
 }

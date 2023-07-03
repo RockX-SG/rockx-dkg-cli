@@ -22,6 +22,7 @@
 package storage
 
 import (
+	"crypto/rsa"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -37,12 +38,16 @@ var (
 )
 
 type Storage struct {
-	db *badger.DB
+	db           *badger.DB
+	thisOperator types.OperatorID
+	thisSK       *rsa.PrivateKey
 }
 
-func NewStorage(db *badger.DB) dkg.Storage {
+func NewStorage(db *badger.DB, operatorID types.OperatorID, operatorKey *rsa.PrivateKey) dkg.Storage {
 	return &Storage{
-		db: db,
+		db:           db,
+		thisOperator: operatorID,
+		thisSK:       operatorKey,
 	}
 }
 
@@ -88,6 +93,11 @@ func (s *Storage) GetDKGOperator(operatorID types.OperatorID) (bool, *dkg.Operat
 			return false, nil, err
 		}
 	}
+
+	if operatorID == s.thisOperator {
+		operator.EncryptionPrivateKey = s.thisSK
+	}
+
 	return true, operator, nil
 }
 

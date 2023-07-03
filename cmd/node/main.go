@@ -51,12 +51,14 @@ func init() {
 }
 
 func main() {
+
 	log := logger.New(serviceName)
-
 	params := &AppParams{}
-	params.loadFromEnv()
-
-	log.Debugf("app env: %s messenger addr: %s", params.print(), messenger.MessengerAddrFromEnv())
+	if err := params.loadFromEnv(); err != nil {
+		log.Errorf("Main: failed to load app params: %s", err.Error())
+		panic(err)
+	}
+	log.Debugf("Main: app env: %s messenger addr: %s", params.print(), messenger.MessengerAddrFromEnv())
 
 	// set up db for storage
 	db, err := setupDB()
@@ -65,16 +67,9 @@ func main() {
 		panic(err)
 	}
 	defer db.Close()
-	storage := store.NewStorage(db)
 
-	// TODO: add a check to verify the node operator is a valid node operator
-	operatorPrivateKey, err := params.loadDecryptedPrivateKey()
-	if err != nil {
-		log.Errorf("Main: failed to load decrypted private key: %s", err.Error())
-		panic(err)
-	}
-	signer := keymanager.NewKeyManager(types.PrimusTestnet, operatorPrivateKey)
-
+	storage := store.NewStorage(db, params.OperatorID, params.OperatorPrivateKey)
+	signer := keymanager.NewKeyManager(types.PrimusTestnet)
 	network := messenger.NewMessengerClient(messenger.MessengerAddrFromEnv())
 
 	config := &dkg.Config{
