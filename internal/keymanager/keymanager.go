@@ -22,25 +22,21 @@
 package keymanager
 
 import (
-	"crypto/ecdsa"
 	"crypto/rand"
 	"crypto/rsa"
 	"errors"
 
 	"github.com/bloxapp/ssv-spec/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 )
 
 type keyManager struct {
 	Domain types.DomainType
-	sk     *ecdsa.PrivateKey
 }
 
-func NewKeyManager(domain types.DomainType, privateKey *ecdsa.PrivateKey) types.DKGSigner {
+func NewKeyManager(domain types.DomainType) types.DKGSigner {
 	return &keyManager{
 		Domain: domain,
-		sk:     privateKey,
 	}
 }
 
@@ -71,12 +67,12 @@ func (km *keyManager) Encrypt(pk *rsa.PublicKey, plaintext []byte) ([]byte, erro
 	return cipher, nil
 }
 
-func (km *keyManager) SignDKGOutput(output types.Root, address common.Address) (types.Signature, error) {
+func (km *keyManager) SignDKGOutput(output types.Root, sk *rsa.PrivateKey) ([]byte, error) {
 	root, err := types.ComputeSigningRoot(output, types.ComputeSignatureDomain(km.Domain, types.DKGSignatureType))
 	if err != nil {
 		return nil, err
 	}
-	return crypto.Sign(root, km.sk)
+	return types.Sign(sk, root)
 }
 
 func (km *keyManager) SignRoot(data types.Root, sigType types.SignatureType, pk []byte) (types.Signature, error) {

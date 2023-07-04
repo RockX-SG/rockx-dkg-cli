@@ -24,7 +24,7 @@ package workers
 import (
 	"context"
 
-	"github.com/RockX-SG/frost-dkg-demo/internal/logger"
+	"github.com/sirupsen/logrus"
 )
 
 type Ctxlog string
@@ -38,10 +38,10 @@ type Runner struct {
 	incomingJobs chan *Job
 	jobs         map[string]context.CancelFunc
 
-	logger *logger.Logger
+	logger *logrus.Logger
 }
 
-func NewRunner(logger *logger.Logger) *Runner {
+func NewRunner(logger *logrus.Logger) *Runner {
 	return &Runner{
 		incomingJobs: make(chan *Job, 10),
 		jobs:         make(map[string]context.CancelFunc),

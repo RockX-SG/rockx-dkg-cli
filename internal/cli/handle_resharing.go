@@ -169,7 +169,7 @@ func (request *ResharingRequest) initMsgForResharing(requestID dkg.RequestID) ([
 
 	// TODO: TBD who signs this init msg
 	ks := testingutils.TestingResharingKeySet()
-	reshareMsg := testingutils.SignDKGMsg(ks.DKGOperators[5].SK, 5, &dkg.Message{
+	reshareMsg := testingutils.SignDKGMsg(ks.DKGOperators[5].EncryptionKey, 5, &dkg.Message{
 		MsgType:    dkg.ReshareMsgType,
 		Identifier: requestID,
 		Data:       reshareBytes,

@@ -42,6 +42,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const serviceName = "node"
+
 var version string
 
 func init() {
@@ -49,29 +51,25 @@ func init() {
 }
 
 func main() {
-	log := logger.New("/var/log/dkg_node.log")
 
+	log := logger.New(serviceName)
 	params := &AppParams{}
-	params.loadFromEnv()
-	log.Debugf("app env: %s messenger: %s", params.print(), messenger.MessengerAddrFromEnv())
+	if err := params.loadFromEnv(); err != nil {
+		log.Errorf("Main: failed to load app params: %s", err.Error())
+		panic(err)
+	}
+	log.Debugf("Main: app env: %s messenger addr: %s", params.print(), messenger.MessengerAddrFromEnv())
 
 	// set up db for storage
 	db, err := setupDB()
 	if err != nil {
-		log.Errorf("Main: failed to setup DB: %w", err)
+		log.Errorf("Main: failed to setup DB: %s", err.Error())
 		panic(err)
 	}
 	defer db.Close()
-	storage := store.NewStorage(db)
 
-	// TODO: add a check to verify the node operator is a valid node operator
-	operatorPrivateKey, err := params.loadDecryptedPrivateKey()
-	if err != nil {
-		log.Errorf("Main: failed to load decrypted private key: %w", err)
-		panic(err)
-	}
-	signer := keymanager.NewKeyManager(types.PrimusTestnet, operatorPrivateKey)
-
+	storage := store.NewStorage(db, params.OperatorID, params.OperatorPrivateKey)
+	signer := keymanager.NewKeyManager(types.PrimusTestnet)
 	network := messenger.NewMessengerClient(messenger.MessengerAddrFromEnv())
 
 	config := &dkg.Config{
@@ -86,14 +84,14 @@ func main() {
 
 	thisOperator, err := thisOperator(uint32(params.OperatorID), storage)
 	if err != nil {
-		log.Errorf("Main: failed to get operator %d from operator registry: %w", err)
+		log.Errorf("Main: failed to get operator %d from operator registry: %s", params.OperatorID, err.Error())
 		panic(err)
 	}
 	dkgnode := dkg.NewNode(thisOperator, config)
 
 	// register dkg operator node with the messenger
 	if err := network.RegisterOperatorNode(strconv.Itoa(int(params.OperatorID)), os.Getenv("NODE_BROADCAST_ADDR")); err != nil {
-		log.Errorf("Main: %w", err)
+		log.Errorf("Main: %s", err.Error())
 		panic(err)
 	}
 

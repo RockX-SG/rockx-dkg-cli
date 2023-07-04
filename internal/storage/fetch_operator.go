@@ -55,8 +55,6 @@ func FetchOperatorByID(operatorID types.OperatorID) (*dkg.Operator, error) {
 		return nil, err
 	}
 
-	fmt.Println("owner", operator.Owner)
-
 	return &dkg.Operator{
 		OperatorID:       operatorID,
 		ETHAddress:       ethAddressFromHex(operator.Owner[2:]),

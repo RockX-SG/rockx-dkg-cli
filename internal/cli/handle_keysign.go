@@ -87,7 +87,7 @@ func (h *CliHandler) sendKeySignMsg(operatorID types.OperatorID, addr string, da
 
 func initMsgForKeySign(requestID dkg.RequestID, data []byte) ([]byte, error) {
 	ks := testingutils.TestingKeygenKeySet()
-	signedInitMsg := testingutils.SignDKGMsg(ks.DKGOperators[1].SK, 1, &dkg.Message{
+	signedInitMsg := testingutils.SignDKGMsg(ks.DKGOperators[1].EncryptionKey, 1, &dkg.Message{
 		MsgType:    dkg.KeySignMsgType,
 		Identifier: requestID,
 		Data:       data,

@@ -45,7 +45,6 @@ func (h *CliHandler) HandleKeygen(c *cli.Context) error {
 	requestID := getRandRequestID()
 	requestIDInHex := hex.EncodeToString(requestID[:])
 
-	fmt.Println("operators", keygenRequest.allOperators())
 	messengerClient := messenger.NewMessengerClient(messenger.MessengerAddrFromEnv())
 	if err := messengerClient.CreateTopic(requestIDInHex, keygenRequest.allOperators()); err != nil {
 		return fmt.Errorf("HandleKeygen: failed to create a new topic on messenger service: %w", err)
@@ -141,7 +140,7 @@ func (request *KeygenRequest) initMsgForKeygen(requestID dkg.RequestID) ([]byte,
 
 	// TODO: TBD who signs this init msg
 	ks := testingutils.TestingKeygenKeySet()
-	signedInitMsg := testingutils.SignDKGMsg(ks.DKGOperators[1].SK, 1, &dkg.Message{
+	signedInitMsg := testingutils.SignDKGMsg(ks.DKGOperators[1].EncryptionKey, 1, &dkg.Message{
 		MsgType:    dkg.InitMsgType,
 		Identifier: requestID,
 		Data:       initBytes,
