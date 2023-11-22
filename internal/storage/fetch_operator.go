@@ -120,6 +120,25 @@ func ParsePublicKeyFromBase64(base64Key string) (*rsa.PublicKey, error) {
 	return publicKey.(*rsa.PublicKey), nil
 }
 
+func PublicKeyToBase64(publicKey *rsa.PublicKey) (string, error) {
+	// Marshal the RSA public key to DER format
+	derBytes, err := x509.MarshalPKIXPublicKey(publicKey)
+	if err != nil {
+		return "", err
+	}
+
+	// Create a PEM block
+	pemBlock := &pem.Block{
+		Type:  "PUBLIC KEY",
+		Bytes: derBytes,
+	}
+
+	// Encode the PEM block to Base64
+	base64Encoded := base64.StdEncoding.EncodeToString(pem.EncodeToMemory(pemBlock))
+
+	return base64Encoded, nil
+}
+
 func getHttpClient() *http.Client {
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},

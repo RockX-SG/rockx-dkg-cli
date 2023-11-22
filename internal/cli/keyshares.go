@@ -81,13 +81,16 @@ func (ks *KeyShares) GenerateKeyshareV4(result *DKGResult, ownerPrefix string) e
 	operatorIds := make([]uint32, 0)
 
 	for operatorID := range result.Output {
-		operator, err := storage.GetOperatorFromRegistryByID(operatorID)
+		operator, err := storage.FetchOperatorByID(operatorID)
 		if err != nil {
 			return fmt.Errorf("ParseDKGResultV4: failed to get operator %d from operator registry: %w", operatorID, err)
 		}
+
+		publicKey, _ := storage.PublicKeyToBase64(operator.EncryptionPubKey)
+
 		operatorData = append(operatorData, OperatorData{
 			ID:          uint32(operatorID),
-			OperatorKey: operator.PublicKey,
+			OperatorKey: publicKey,
 		})
 
 		operatorIds = append(operatorIds, uint32(operatorID))
