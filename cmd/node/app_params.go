@@ -28,19 +28,21 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/RockX-SG/frost-dkg-demo/internal/utils"
 	"github.com/bloxapp/ssv-spec/types"
 )
 
 type AppParams struct {
-	OperatorID         types.OperatorID
 	HttpAddress        string
+	OperatorID         types.OperatorID
 	OperatorPrivateKey *rsa.PrivateKey
 }
 
 func (params *AppParams) loadFromEnv() error {
 	params.loadOperatorID()
 	params.loadHttpAddress()
-	return params.loadOperatorPrivateKey()
+	params.loadOperatorPrivateKey()
+	return nil
 }
 
 func (params *AppParams) print() string {
@@ -68,18 +70,35 @@ func (params *AppParams) loadHttpAddress() {
 }
 
 func (params *AppParams) loadOperatorPrivateKey() error {
-	encodedKey := os.Getenv("OPERATOR_PRIVATE_KEY")
-	if encodedKey == "" {
-		return fmt.Errorf("missing operator private key in app env")
+	passwordFilePath := os.Getenv("OPERATOR_PRIVATE_KEY_PASSWORD_PATH")
+	if passwordFilePath == "" {
+		encodedKey := os.Getenv("OPERATOR_PRIVATE_KEY")
+		if encodedKey == "" {
+			return fmt.Errorf("missing operator private key in app env")
+		}
+		decodedKey, err := base64.StdEncoding.DecodeString(encodedKey)
+		if err != nil {
+			return fmt.Errorf("failed to decode base64 encoded operator private key: %w", err)
+		}
+		operatorPrivateKey, err := types.PemToPrivateKey(decodedKey)
+		if err != nil {
+			return fmt.Errorf("failed to convert pem block to rsa private key %w", err)
+		}
+		params.OperatorPrivateKey = operatorPrivateKey
+	} else {
+		lockedPrivateKey, err := os.ReadFile(os.Getenv("OPERATOR_PRIVATE_KEY_PATH"))
+		if err != nil {
+			return fmt.Errorf("failed to read operator private key file %w", err)
+		}
+		keyPassword, err := os.ReadFile(passwordFilePath)
+		if err != nil {
+			return fmt.Errorf("failed to read operator private key password file %w", err)
+		}
+		privateKey, err := utils.UnlockRSAJSON(lockedPrivateKey, string(keyPassword))
+		if err != nil {
+			return fmt.Errorf("failed to unlock operator private key %w", err)
+		}
+		params.OperatorPrivateKey = privateKey
 	}
-	decodedKey, err := base64.StdEncoding.DecodeString(encodedKey)
-	if err != nil {
-		return fmt.Errorf("failed to decode base64 encoded operator private key: %w", err)
-	}
-	operatorPrivateKey, err := types.PemToPrivateKey(decodedKey)
-	if err != nil {
-		return fmt.Errorf("failed to convert pem block to rsa private key %w", err)
-	}
-	params.OperatorPrivateKey = operatorPrivateKey
 	return nil
 }
