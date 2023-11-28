@@ -70,7 +70,7 @@ type operatorResponse struct {
 
 func GetOperatorFromRegistryByID(operatorID types.OperatorID) (*operatorResponse, error) {
 	var operator = new(operatorResponse)
-	respBody, err := getResponse(fmt.Sprintf("https://api.ssv.network/api/v3/prater/operators/%d", operatorID))
+	respBody, err := getResponse(fmt.Sprintf("https://api.ssv.network/api/v4/prater/operators/%d", operatorID))
 	if err != nil {
 		return nil, err
 	}
