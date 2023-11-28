@@ -22,9 +22,9 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/RockX-SG/frost-dkg-demo/internal/logger"
 	"github.com/RockX-SG/frost-dkg-demo/internal/messenger"
@@ -36,11 +36,19 @@ import (
 
 const serviceName = "messenger"
 
-var version string
+var (
+	version  string
+	httpAddr string
+)
+
+func init() {
+	flag.StringVar(&httpAddr, "http-addr", "0.0.0.0:3000", "host:port of the application")
+}
 
 func main() {
-	log := logger.New(serviceName)
+	flag.Parse()
 
+	log := logger.New(serviceName)
 	m := &messenger.Messenger{
 		Topics: map[string]*messenger.Topic{
 			messenger.DefaultTopic: {
@@ -61,16 +69,11 @@ func main() {
 		Fn: m.ProcessIncomingMessageWorker,
 	})
 
-	messengerAddr := os.Getenv("MESSENGER_ADDR")
-	if messengerAddr == "" {
-		messengerAddr = "0.0.0.0:3000"
-	}
-
 	r := gin.Default()
 	r.Use(logger.GinLogger(log))
 	setRoutes(r, m, runner)
 
-	panic(r.Run(messengerAddr))
+	panic(r.Run(httpAddr))
 }
 
 func setRoutes(r *gin.Engine, m *messenger.Messenger, runner *workers.Runner) {

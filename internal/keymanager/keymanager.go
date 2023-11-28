@@ -72,7 +72,7 @@ func (km *keyManager) SignDKGOutput(output types.Root, sk *rsa.PrivateKey) ([]by
 	if err != nil {
 		return nil, err
 	}
-	return types.Sign(sk, root)
+	return types.Sign(sk, root[:])
 }
 
 func (km *keyManager) SignRoot(data types.Root, sigType types.SignatureType, pk []byte) (types.Signature, error) {
