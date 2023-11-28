@@ -41,8 +41,7 @@ type AppParams struct {
 func (params *AppParams) loadFromEnv() error {
 	params.loadOperatorID()
 	params.loadHttpAddress()
-	params.loadOperatorPrivateKey()
-	return nil
+	return params.loadOperatorPrivateKey()
 }
 
 func (params *AppParams) print() string {
