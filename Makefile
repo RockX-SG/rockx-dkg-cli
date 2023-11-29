@@ -50,7 +50,7 @@ test:
 clean:
 	rm deposit-data_*
 	rm dkg_results_*
-	rm keyshares_*
+	rm keyshares-*
 	rm $(GOBIN)/*
 	rm *.log
 
