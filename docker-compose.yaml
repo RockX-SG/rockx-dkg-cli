@@ -4,7 +4,7 @@ services:
     build:
       context: ./
       dockerfile: build/docker/messenger/Dockerfile
-    command: ./messenger
+    command: ./messenger -http-addr 0.0.0.0:3000
     env_file: env/messenger.env
     restart: on-failure
     ports: 
@@ -98,18 +98,5 @@ services:
     restart: on-failure
     ports: 
       - 8087:8087
-    volumes:
-      - ./keys:/keys
-  operator-8:
-    build:
-      context: ./
-      dockerfile: build/docker/node/Dockerfile
-    command: ./node
-    depends_on:
-      - "messenger"
-    env_file: env/operator.8.env
-    restart: on-failure
-    ports: 
-      - 8088:8088
     volumes:
       - ./keys:/keys
