@@ -196,7 +196,7 @@ func (s *Subscriber) ProcessOutgoingMessageWorker(ctx *context.Context) {
 func MessengerAddrFromEnv() string {
 	messengerAddr := os.Getenv("MESSENGER_SRV_ADDR")
 	if messengerAddr == "" {
-		messengerAddr = "http://0.0.0.0:3000"
+		messengerAddr = "http://dkg-messenger.rockx.com"
 	}
 	return messengerAddr
 }
