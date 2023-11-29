@@ -26,12 +26,13 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"github.com/RockX-SG/frost-dkg-demo/internal/logger"
 	"github.com/RockX-SG/frost-dkg-demo/internal/messenger"
 	"github.com/RockX-SG/frost-dkg-demo/internal/ping"
 	"github.com/RockX-SG/frost-dkg-demo/internal/workers"
-	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 const serviceName = "messenger"
@@ -61,41 +62,46 @@ func main() {
 	}
 	m.WithLogger(log)
 
-	runner := workers.NewRunner(log)
-	go runner.Run()
+	worker := workers.NewRunner(log)
+	go worker.Run()
 
-	runner.AddJob(&workers.Job{
+	worker.AddJob(&workers.Job{
 		ID: fmt.Sprintf("TOPIC__%s", messenger.DefaultTopic),
 		Fn: m.ProcessIncomingMessageWorker,
 	})
 
 	r := gin.Default()
 	r.Use(logger.GinLogger(log))
-	setRoutes(r, m, runner)
 
+	InitializeAPIEndpoints(r, m, worker)
+
+	log.Infof("Starting %s on %s", serviceName, httpAddr)
 	panic(r.Run(httpAddr))
 }
 
-func setRoutes(r *gin.Engine, m *messenger.Messenger, runner *workers.Runner) {
+func InitializeAPIEndpoints(r *gin.Engine, m *messenger.Messenger, w *workers.Runner) {
 
-	r.GET("/ping", ping.HandlePing)
-	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
+	// Message Topic - CRUD APIs
+	topicsGroup := r.Group("/topics")
+	{
+		topicsGroup.GET("", m.GetTopics())
+		topicsGroup.POST("", m.CreateOrUpdateTopic())
+		topicsGroup.GET("/:topic_name", m.GetTopic())
+		topicsGroup.DELETE("/:topic_name", m.DeleteTopic())
+	}
 
-	// CRUD APIs for Topics
-	r.GET("/topics", m.GetTopics())
-	r.POST("/topics", m.HandleCreateTopic())
-	r.GET("/topics/:topic_name", m.GetTopic())
-	r.DELETE("/topics/:topic_name", m.DeleteTopic())
+	// DKG Node Registration
+	r.POST("/register_node", m.HandleNodeRegistration(w))
 
-	// Register a node
-	r.POST("/register_node", m.HandleNodeRegistration(runner))
-
-	// DKG network implementation
+	// DKG network layer actions
 	r.POST("/publish", m.HandlePublish())
 	r.POST("/stream/dkgoutput", m.HandleStreamDKGOutput())
 	r.POST("/stream/dkgblame", m.HandleStreamDKGBlame())
 	r.GET("/data/:request_id", m.HandleGetData())
 
+	// Service Health and Monitoring APIs
+	r.GET("/ping", ping.HandlePing)
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	r.GET("/version", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{
 			"version": version,

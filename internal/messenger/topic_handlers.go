@@ -38,7 +38,7 @@ func (m *Messenger) GetTopics() func(*gin.Context) {
 	}
 }
 
-func (m *Messenger) HandleCreateTopic() func(*gin.Context) {
+func (m *Messenger) CreateOrUpdateTopic() func(*gin.Context) {
 	return func(c *gin.Context) {
 		topicJSON := &TopicJSON{}
 		if err := c.ShouldBindJSON(topicJSON); err != nil {
