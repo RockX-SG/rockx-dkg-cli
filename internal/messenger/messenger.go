@@ -96,23 +96,23 @@ func (m *Messenger) ProcessIncomingMessageWorker(ctx *context.Context) {
 		tp, exist := m.Topics[msg.Topic]
 		if !exist {
 			var err = &ErrTopicNotFound{TopicName: msg.Topic}
-			m.logger.Errorf("ProcessIncomingMessageWorker: %w", err)
+			m.logger.Errorf("ProcessIncomingMessageWorker: %v", err)
 			continue
 		}
 
 		ssvMsg := &types.SSVMessage{}
 		if err := ssvMsg.Decode(msg.Data); err != nil {
-			m.logger.Errorf("ProcessIncomingMessageWorker: %w", err)
+			m.logger.Errorf("ProcessIncomingMessageWorker: %v", err)
 			continue
 		}
 		signedMsg := &dkg.SignedMessage{}
 		if err := signedMsg.Decode(ssvMsg.Data); err != nil {
-			m.logger.Errorf("ProcessIncomingMessageWorker: failed to decode signed message: %w", err)
+			m.logger.Errorf("ProcessIncomingMessageWorker: failed to decode signed message: %v", err)
 			continue
 		}
 		protocolMsg := &frost.ProtocolMsg{}
 		if err := protocolMsg.Decode(signedMsg.Message.Data); err != nil {
-			m.logger.Errorf("ProcessIncomingMessageWorker: failed to decode protocol message: %w", err)
+			m.logger.Errorf("ProcessIncomingMessageWorker: failed to decode protocol message: %v", err)
 			continue
 		}
 
@@ -169,14 +169,14 @@ func (s *Subscriber) ProcessOutgoingMessageWorker(ctx *context.Context) {
 		_, exist := s.SubscribesTo[msg.Topic]
 		if !exist {
 			var err = &ErrTopicNotFound{TopicName: msg.Topic}
-			logger.Errorf("ProcessOutgoingMessageWorker: %w", err)
+			logger.Errorf("ProcessOutgoingMessageWorker: %v", err)
 			continue
 		}
 
 		// TODO: replace this client
 		resp, err := http.Post(fmt.Sprintf("%s/consume", s.SrvAddr), "application/json", bytes.NewBuffer(msg.Data))
 		if err != nil {
-			logger.Errorf("ProcessOutgoingMessageWorker: %w", err)
+			logger.Errorf("ProcessOutgoingMessageWorker: %v", err)
 			continue
 		}
 
@@ -185,7 +185,7 @@ func (s *Subscriber) ProcessOutgoingMessageWorker(ctx *context.Context) {
 			s.Outgoing <- msg
 
 			err := fmt.Errorf("failed to publish message to the subscriber %s %v", s.Name, string(respbody))
-			logger.Errorf("ProcessOutgoingMessageWorker: %w", err)
+			logger.Errorf("ProcessOutgoingMessageWorker: %v", err)
 		} else {
 			logger.Infof("ProcessOutgoingMessageWorker: message sent to %s successfully", s.Name)
 		}

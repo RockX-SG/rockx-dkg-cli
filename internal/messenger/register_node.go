@@ -38,7 +38,7 @@ func (m *Messenger) HandleNodeRegistration(runner *workers.Runner) func(*gin.Con
 		_, exist := m.Topics[subscribesTo]
 		if !exist {
 			err := &ErrTopicNotFound{TopicName: subscribesTo}
-			m.logger.Errorf("HandleNodeRegistration: %w", err)
+			m.logger.Errorf("HandleNodeRegistration: %v", err)
 			c.JSON(http.StatusNotFound, gin.H{
 				"message": fmt.Sprintf("topic %s doesn't exist", subscribesTo),
 				"error":   err.Error(),
@@ -53,7 +53,7 @@ func (m *Messenger) HandleNodeRegistration(runner *workers.Runner) func(*gin.Con
 		}
 
 		if err := c.ShouldBindJSON(subscriber); err != nil {
-			m.logger.Errorf("HandleNodeRegistration: failed to parse subscriber from request body: %w", err)
+			m.logger.Errorf("HandleNodeRegistration: failed to parse subscriber from request body: %v", err)
 			c.JSON(http.StatusBadRequest, gin.H{
 				"message": "failed to parse subscriber data from the request body",
 				"error":   err.Error(),
@@ -63,7 +63,7 @@ func (m *Messenger) HandleNodeRegistration(runner *workers.Runner) func(*gin.Con
 
 		if subscriber.Name == "" || subscriber.SrvAddr == "" {
 			err := fmt.Errorf("empty name %s or subscriber's address %s", subscriber.Name, subscriber.SrvAddr)
-			m.logger.Errorf("HandleNodeRegistration: %w", err)
+			m.logger.Errorf("HandleNodeRegistration: %v", err)
 			c.JSON(http.StatusBadRequest, gin.H{
 				"message": "invalid subscriber data: empty name or addr",
 				"error":   err.Error(),

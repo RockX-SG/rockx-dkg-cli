@@ -42,7 +42,7 @@ func (m *Messenger) CreateOrUpdateTopic() func(*gin.Context) {
 	return func(c *gin.Context) {
 		topicJSON := &TopicJSON{}
 		if err := c.ShouldBindJSON(topicJSON); err != nil {
-			m.logger.Errorf("HandleCreateTopic: failed to parse topic from request body: %w", err)
+			m.logger.Errorf("HandleCreateTopic: failed to parse topic from request body: %v", err)
 			c.JSON(http.StatusBadRequest, gin.H{
 				"message": "failed to load data from request body",
 				"error":   err.Error(),
