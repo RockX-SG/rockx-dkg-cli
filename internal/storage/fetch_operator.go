@@ -129,7 +129,7 @@ func PublicKeyToBase64(publicKey *rsa.PublicKey) (string, error) {
 
 	// Create a PEM block
 	pemBlock := &pem.Block{
-		Type:  "PUBLIC KEY",
+		Type:  "RSA PUBLIC KEY",
 		Bytes: derBytes,
 	}
 

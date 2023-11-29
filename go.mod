@@ -22,6 +22,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/urfave/cli/v2 v2.25.7
 	github.com/wealdtech/go-eth2-wallet-encryptor-keystorev4 v1.4.1
+	github.com/wealdtech/go-merkletree v1.0.0
 )
 
 require (

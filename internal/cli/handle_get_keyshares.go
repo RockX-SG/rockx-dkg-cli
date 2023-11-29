@@ -27,7 +27,11 @@ import (
 	"time"
 
 	"github.com/RockX-SG/frost-dkg-demo/internal/utils"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/herumi/bls-eth-go-binary/bls"
 	"github.com/urfave/cli/v2"
+
+	"github.com/wealdtech/go-merkletree/keccak256"
 )
 
 func (h *CliHandler) HandleGetKeyShares(c *cli.Context) error {
@@ -43,9 +47,10 @@ func (h *CliHandler) HandleGetKeyShares(c *cli.Context) error {
 		return fmt.Errorf("HandleGetKeyShares: failed to get ValidatorPK from keygen results: %w", err)
 	}
 
-	ownerAddress := c.String("owner-address")
+	ownerAddress := common.HexToAddress(c.String("owner-address")).Hex()
 	ownerNonce := c.Int("owner-nonce")
-	signingRoot := []byte(fmt.Sprintf("%s:%d", ownerAddress, ownerNonce))
+
+	signingRoot := keccak256.New().Hash([]byte(fmt.Sprintf("%s:%d", ownerAddress, ownerNonce)))
 
 	signatureRequestID, err := h.GenerateSignature(c, vk, signingRoot)
 	if err != nil {
@@ -76,13 +81,30 @@ func (h *CliHandler) HandleGetKeyShares(c *cli.Context) error {
 		return fmt.Errorf("HandleGetKeyShares: failed to sign owner prefix: %w", err)
 	}
 
-	ownerPrefix, err := signatureResult.GetSignatureFromKeySign()
+	ownerSig, err := signatureResult.GetSignatureFromKeySign()
 	if err != nil {
 		return fmt.Errorf("HandleGetKeyShares: failed to parse owner prefix from signature result: %w", err)
 	}
 
+	var (
+		pk  bls.PublicKey
+		sig bls.Sign
+	)
+
+	if err := pk.Deserialize(vk); err != nil {
+		return fmt.Errorf("HandleGetKeyShares: failed to deserialize ValidatorPK: %w", err)
+	}
+
+	if err := sig.DeserializeHexStr(ownerSig); err != nil {
+		return fmt.Errorf("HandleGetKeyShares: failed to deserialize signature: %w", err)
+	}
+
+	if !sig.VerifyByte(&pk, signingRoot) {
+		return fmt.Errorf("HandleGetKeyShares: failed to verify signature")
+	}
+
 	keyshares := &KeyShares{}
-	if err := keyshares.GenerateKeyshareV4(keygenOutput, ownerPrefix); err != nil {
+	if err := keyshares.GenerateKeyshareV4(keygenOutput, ownerSig, ownerAddress, ownerNonce); err != nil {
 		return fmt.Errorf("HandleGetKeyShares: failed to parse keyshare from dkg results: %w", err)
 	}
 

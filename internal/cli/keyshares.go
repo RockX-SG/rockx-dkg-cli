@@ -34,10 +34,10 @@ import (
 )
 
 type KeyShares struct {
-	Version   string           `json:"version"`
-	Data      KeySharesData    `json:"data"`
-	Payload   KeySharesPayload `json:"payload"`
-	CreatedAt time.Time        `json:"createdAt"`
+	Version   string        `json:"version"`
+	Data      KeySharesData `json:"data"`
+	Payload   Payload       `json:"payload"`
+	CreatedAt time.Time     `json:"createdAt"`
 }
 
 type KeySharesData struct {
@@ -55,19 +55,15 @@ type KeySharesKeys struct {
 	EncryptedKeys []string `json:"encryptedKeys"`
 }
 
-type KeySharesPayload struct {
-	Readable ReadablePayload `json:"readable"`
-}
-
-type ReadablePayload struct {
+type Payload struct {
 	PublicKey   string   `json:"publicKey"`
 	OperatorIDs []uint32 `json:"operatorIds"`
-	Shares      string   `json:"shares"`
-	Amount      string   `json:"amount"`
-	Cluster     string   `json:"cluster"`
+	Shares      string   `json:"sharesData"`
+	Owner       string   `json:"ownerAddress"`
+	Nonce       int      `json:"ownerNonce"`
 }
 
-func (ks *KeyShares) GenerateKeyshareV4(result *DKGResult, ownerPrefix string) error {
+func (ks *KeyShares) GenerateKeyshareV4(result *DKGResult, ownerSig, ownerAddress string, ownerNonce int) error {
 
 	if result.Blame != nil {
 		return fmt.Errorf("ParseDKGResultV4: result contains blame output")
@@ -121,14 +117,12 @@ func (ks *KeyShares) GenerateKeyshareV4(result *DKGResult, ownerPrefix string) e
 		Operators: operatorData,
 	}
 
-	payload := KeySharesPayload{
-		Readable: ReadablePayload{
-			PublicKey:   "0x" + result.Output[types.OperatorID(operatorIds[0])].Data.ValidatorPubKey,
-			OperatorIDs: operatorIds,
-			Shares:      sharesToBytes(shares.PublicKeys, shares.EncryptedKeys, ownerPrefix),
-			Amount:      "Amount of SSV tokens to be deposited to your validator's cluster balance (mandatory only for 1st validator in a cluster)",
-			Cluster:     "The latest cluster snapshot data, obtained using the cluster-scanner tool. If this is the cluster's 1st validator then use - {0,0,0,0,0,false}",
-		},
+	payload := Payload{
+		PublicKey:   "0x" + result.Output[types.OperatorID(operatorIds[0])].Data.ValidatorPubKey,
+		OperatorIDs: operatorIds,
+		Shares:      sharesToBytes(shares.PublicKeys, shares.EncryptedKeys, ownerSig),
+		Owner:       ownerAddress,
+		Nonce:       ownerNonce,
 	}
 
 	ks.Version = "v4"
@@ -138,31 +132,26 @@ func (ks *KeyShares) GenerateKeyshareV4(result *DKGResult, ownerPrefix string) e
 	return nil
 }
 
-func sharesToBytes(publicKeys []string, privateKeys []string, prefix string) string {
+func sharesToBytes(publicKeys []string, privateKeys []string, ownerSig string) string {
 	encryptedShares, _ := decodeEncryptedShares(privateKeys)
 	arrayPublicKeys := bytes.Join(toArrayByteSlices(publicKeys), []byte{})
 	arrayEncryptedShares := bytes.Join(toArrayByteSlices(encryptedShares), []byte{})
 	pkPsBytes := append(arrayPublicKeys, arrayEncryptedShares...)
-	return "0x" + prefix + hex.EncodeToString(pkPsBytes)
+	return "0x" + ownerSig + hex.EncodeToString(pkPsBytes)
 }
 
 func decodeEncryptedShares(encodedEncryptedShares []string) ([]string, error) {
 	var result []string
 	for _, item := range encodedEncryptedShares {
-		// Decode the base64 string
 		decoded, err := base64.StdEncoding.DecodeString(item)
 		if err != nil {
 			return nil, err
 		}
-
-		// Encode the decoded bytes as a hexadecimal string with '0x' prefix
 		result = append(result, "0x"+hex.EncodeToString(decoded))
 	}
 	return result, nil
 }
 
-// Convert a slice of strings to a slice of byte slices, where each string is converted to a byte slice
-// using hex decoding
 func toArrayByteSlices(input []string) [][]byte {
 	var result [][]byte
 	for _, str := range input {
