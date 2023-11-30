@@ -1,189 +1,324 @@
-## RockX DKG CLI
+# RockX DKG CLI
 
-### Overview - Validator Onboarding
-![](/validator_onboarding.png)
+- [RockX DKG CLI](#rockx-dkg-cli)
+  - [Overview](#overview)
+  - [DKG CLI](#dkg-cli)
+    - [Pre-built binary](#pre-built-binary)
+      - [Downloads](#downloads)
+      - [Installation](#installation)
+    - [Build from source](#build-from-source)
+    - [Environment Variables](#environment-variables)
+    - [Usage](#usage)
+      - [Keygen](#keygen)
+      - [Viewing results](#viewing-results)
+      - [Generate deposit data](#generate-deposit-data)
+      - [Get Keyshares](#get-keyshares)
+  - [DKG Node](#dkg-node)
+    - [Run using docker container](#run-using-docker-container)
+      - [Environment Variables](#environment-variables-1)
+      - [Running the container](#running-the-container)
+  - [DKG Messenger](#dkg-messenger)
+      - [Run using docker container](#run-using-docker-container-1)
+  - [Examples](#examples)
 
-To become a validator on Ethereum 2.0 using SSV, you need to:
+## Overview
 
-1. Create a signing key and withdrawal key using instructions on the Ethereum Launchpad
-2. Make a deposit of 32 ETH along with deposit data via the Ethereum 2.0 deposit contract
-3. Select operators in SSV app
-4. Split the signing key to the selected operators
-5. Selected operators will begin performing their duties for the new validators
+This CLI utility helps user to perform DKG based on FROST (Flexible Round-Optimized Schnorr Threshold) signature scheme. Unlike single-party signatures, threshold signatures involve multiple participants, each possessing a private key share. FROST reduces network overhead and supports efficient signing with two-round or single-round options while retaining genuine threshold signing capabilities. It can identify and exclude misbehaving participants, making it well-suited for practical MPC deployments. FROST ensures security against chosen-message attacks, assuming the hardness of the discrete logarithm problem and control by adversaries over fewer participants than the threshold.
 
-> Note: This process is without the use of Distributed Key Generation (DKG) method to generate the keys and deposit data.
+This repository contains three primary services. SSV operators will execute the DKG Node service, while users creating validator keys on their local machines will utilize the CLI tool. Detailed instructions for building and running both the DKG Node and CLI services are provided in subsequent sections. Additionally, the repository includes a messenger service, serving as a communication layer connecting all DKG nodes for message exchange. RockX will host the messenger service for DKG usage in the SSV platform. If you prefer to run your own messenger service locally or as a Docker container, instructions for doing so are also available in a later section. Here's a brief overview of each service:
 
-With DKG, instead of creating signing key and deposit data manually, you can:
+| Service Name | Description | 
+| ------------ | ----------- |
+| `rockx-dkg-cli`| A CLI utility for users to initiate DKG ceremony for keygen/resharing and generate files for DKG result, Deposit Data and SSV Keyshares |
+| `rockx-dkg-node`| This is the core service run by each operator to participate in DKG ceremony |
+| `rockx-dkg-messenger`| This is the communication layer enabling DKG Nodes to broadcase protocol messages to each other|
 
-1. Send a request through the SSV app to generate the keys and deposit data automatically.
-2. The request can be bundled with operator selection, so no need for separate steps.
-3. The operator will perform the DKG protocol to generate the keys and deposit data
-4. User needs to supply the withdrawal credential (hash of the withdrawal key)
-5. Retrieve deposit data from SSV app after DKG and use it to deposit 32 ETH via Ethereum 2.0 deposit contract
-6. Pre-selected operators will begin performing their duties for the new validators after deposit is made.
+The relationship between these services can be summarized in the following diagram
 
-The process of creating keys and deposit data with DKG is different from without DKG, but they are compatible with each other. DKG gives users another option to generate keys and in some cases it may be required, but the existing way of generating keys will still work and no action is needed from the users.
+![](/services_relationship.png)
 
-## Getting Started (for local dev)
+## DKG CLI
 
-This repository has a set of services that demonstrate how to use frost DKG to generate a validator public key and shares that are split between operators using Shamir Secret Sharing.
-It includes:
+### Pre-built binary
 
-1. An CLI utility that provides ways to start keygen/resharing and get results to retrieve validator public key, and generate deposit data in json format
-2. A messenger service that allows operators to register and handles messages between operators
-3. A Node service that receives messages from other nodes or CLI tool and runs the DKG algorithm to generate the validator public key
+#### Downloads
+|Version|Link| os|arch|
+|-------|----|---|----|
+|0.2.8| https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.8/rockx-dkg-cli.0.2.8.darwin.arm64.tar.gz | darwin| arm64|
+|0.2.8| https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.8/rockx-dkg-cli.0.2.8.linux.amd64.tar.gz | linux| amd64|
 
-### Prerequisites
+#### Installation
+1. Download the latest version of the cli tool from above links as per your system. The command for linux with amd64 architecture will be as follows:
+
+```
+wget https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.8/rockx-dkg-cli.0.2.8.linux.amd64.tar.gz
+```
+2. Extract the CLI tool
+
+```
+tar -xzvf rockx-dkg-cli.0.2.8.linux.amd64.tar.gz
+```
+3. Move the downloaded binary to your PATH
+
+```
+cp ./rockx-dkg-cli /usr/local/bin
+```
+> use sudo to run this command as root if you get permission denied error
+
+4. Configure Messenger Service Endpoint
+
+The default messenger address is preconfigured as https://dkg-messenger.rockx.com. If you're using this tool within the SSV platform, you can simply proceed without modifying the following environment variable. However, if you are hosting your own instance of the messenger service or running it locally on your machine (localhost), you have the option to set the following variable to specify the correct address for the messenger service configuration.
+```
+export MESSENGER_SRV_ADDR=https://dkg-messenger.rockx.com
+```
+
+5. Configure logging directory
+
+The debug logs will be stored in the current directory. You can configure a custom path for logging by setting the following environment variable. Please note that you specify a location where this service has permission to create and write to a file.
+
+```
+export DKG_LOG_PATH=.
+```
+
+### Build from source
+
+**Prerequisites**
 1. Go 1.19
-2. Docker (20 or later)
-3. Docker Compose (1.29 or later)
-4. Keystore files for each dkg operator in `/keys` folder
+2. Docker (version 20 or later)
+3. Docker Comose (1.29 or later)
 
-### Installation
-This code repository contains a Docker Compose configuration file to set up and run all necessary services. To start these services, run the following command:
+To install the cli tool from source, clone this repository and run the following command
 
 ```
-docker-compose up -d
-```
-
-To install the cli tool, run the following command:
-```shell
 make build
 ```
 
-The cli binary can be found at `./build/bin` as `rockx-dkg-cli`. You can add it to you PATH to access it directly buy running
+The cli binary will be created at `./build/bin/rockx-dkg-cli`. You can add it to your PATH to access it directly by running
 
 ```
 cd ./build/bin
 export PATH=$PATH:`pwd`
 ```
 
-If you are running this cluster locally and if you are using hardcoded operators than set the following env vars
+### Environment Variables
+
+| Variable | Description | Default Value |
+| -------- | ----------- | ------------- |
+| MESSENGER_SRV_ADDR | Address of messenger service | https://dkg-messenger.rockx.com
+| USE_HARDCODED_OPERATORS | Use hardcoded private keys for operators for local testing. By default it's set to false and you need to set it to `true` to run DKG locally  | false
+
+If you are running the example set of services (see [Examples](#example)) locally including the messenger service then make sure to set the following env variables
+
 ```
 export MESSENGER_SRV_ADDR=http://0.0.0.0:3000
 export USE_HARDCODED_OPERATORS=true
 ```
 
-You can check all the available command by just typing `rockx-dkg-cli`
+### Usage
+
+By now you must have installed the DKG CLI tool. You can run following commands:
+
+#### Keygen
+
+The `keygen` command initiates keygen protocol. It takes the following parameters:
+
+1.  --operator: Key value pair of operatorID (int) and operator's DKG node endpoint
+2. --threshold: the minimum number of operators required to sign a message.
+3. --withdrawal-credentials: The withdrawal credential associated with the validator
+4. --fork-version: ETH fork version (for eg: prater)
+
+Example: 
+
 ```
-NAME:
-   rockx-dkg-cli - A cli tool to run DKG for keygen and resharing and generate deposit data
-
-USAGE:
-   rockx-dkg-cli [global options] command [command options] [arguments...]
-
-COMMANDS:
-   keygen, k                   start keygen process
-   resharing, r                start resharing process
-   get-dkg-results, gr         get validator-pk and key shares data for all operators
-   get-keyshares, gks          generates a keyshare for registering the validator on ssv UI
-   generate-deposit-data, gdd  generate deposit data in json format
-   help, h                     Shows a list of commands or help for one command
-
-GLOBAL OPTIONS:
-   --help, -h  show help (default: false)
-```
-
-### Key Generation
-The `keygen` command is used to generate a new set of key shares using the distributed key generation protocol. The command takes the following parameters:
-
-##### Command Options
---operator: The key value pair of operatorID (int) and server addr of the dkg operator node 
---threshold: The minimum number of operators required to sign a message.
---withdrawal-credentials: The withdrawal credentials associated with the validator account.
---fork-version: The fork version value.
-
-##### Example:
-```
-rockx-dkg-cli keygen --operator 1="http://0.0.0.0:8081" --operator 2="http://0.0.0.0:8082" --operator 3="http://0.0.0.0:8083" --operator 4="http://0.0.0.0:8084" --threshold 3 --withdrawal-credentials "0100000000000000000000001d2f14d2dffee594b4093d42e4bc1b0ea55e8aa7" --fork-version "prater"
+rockx-dkg-cli keygen \
+    --operator 347="http://34.142.183.114:8081" \
+    --operator 348="http://34.142.183.114:8080" \
+    --operator 350="http://35.198.251.30:8080" \
+    --operator 351="http://35.187.235.146:8080" \
+    --threshold 3 \
+    --withdrawal-credentials "0100000000000000000000001d2f14d2dffee594b4093d42e4bc1b0ea55e8aa7" \
+    --fork-version "prater"
 ```
 
 The CLI will return a request ID in the following format:
 ```
-keygen init request sent with ID: 9a45c1f30a9896c5263508c2a132ebf7fc7e3c37ab86c74b
+keygen init request sent with ID: 33a5b7fe2b415673c4d971e6c0b002ce7d583b6621dffb31
 ```
 
-### Resharing
-The `resharing` command is used to reshare an existing validator public key from old committee members to new committee
+#### Viewing results
 
-##### Command Options
---operator: The key value pair of operatorID (int) and server addr of the dkg operator node in the new committee
---old-operator: The key value pair of operatorID (int) and server addr of the dkg operator node from the old committee. Atleast previous threshold number of operators are required to successfully perform resharing
---threshold: The minimum number of operators required to sign a message.
---validator-pk: The public key of the validator account.
+This command generates results of keygen/reshare by using the request ID generated in keygen/reshare command. It takes the following parameter:
 
-##### Example:
+1. --request-id: ID generated from calling keygen or reshare
+
+Example:
 ```
-rockx-dkg-cli resharing --operator 5="http://0.0.0.0:8085"  --operator 6="http://0.0.0.0:8086"  --operator 7="http://0.0.0.0:8087"  --operator 8="http://0.0.0.0:8088" --old-operator 1="http://0.0.0.0:8081" --old-operator 2="http://0.0.0.0:8082" --old-operator 3="http://0.0.0.0:8083"  --threshold 3 --validator-pk adf8b634f1c2bb64fe61af95b208a2a7bdac0d2d15963f83463bdb85c7e726250bfa3a390bf01edfc0700d61f4bee579
-```
-The CLI will return a request ID in the following format:
-
-```
-resharing init request sent with ID: c9e8c174060ee45bf86aaea3e409d8ee48a8fcb3d008fd18
-```
-
-### Viewing Results
-To view the results of a key generation process (or resharing), use the request ID returned from the previous step and use `get-dkg-results` command
-
-##### Command Options
---request-id: request id generated from calling keygen or resharing command
-
-##### Example:
-```
-rockx-dkg-cli get-dkg-results --request-id 9a45c1f30a9896c5263508c2a132ebf7fc7e3c37ab86c74b
+rockx-dkg-cli get-dkg-results --request-id 33a5b7fe2b415673c4d971e6c0b002ce7d583b6621dffb31
 ```
 This will write the results of the key generation/resharing process with the given request ID to a file of format `dkg_results_<request_id>_<timestamp>.json`
 
 ```
-writing results to file: dkg_results_c9e8c174060ee45bf86aaea3e409d8ee48a8fcb3d008fd18_1678083260.json
+writing results to file: dkg_results_33a5b7fe2b415673c4d971e6c0b002ce7d583b6621dffb31_1701317995.json
 ```
 
-### Generating Keyshares file
-To generate keyshares file to be uploaded to SSV V3 UI for registering validater, `get-keyshares` command is used
+#### Generate deposit data
 
-##### Command Options
---request-id value, --req value    request id for keygen/resharing
---operator value, -o value         operator key-value pair
---owner-address value, --oa value  The cluster owner address (in the SSV contract)
---owner-nonce value, --on value    The validator registration nonce of the account (owner address) within the SSV contract (increments after each validator registration), obtained using the ssv-scanner tool. (default: 0)
+Once the keygen is finished, you can also generate a Deposit Data file for depositing 32 ETH into your validator. It takes the following parameters:
 
-##### Example:
-```
-rockx-dkg-cli get-keyshares --operator 1="http://0.0.0.0:8081" --operator 2="http://0.0.0.0:8082" --operator 3="http://0.0.0.0:8083" --operator 4="http://0.0.0.0:8084" --owner-address  0x1d2f14d2dffee594b4093d42e4bc1b0ea55e8aa7 --owner-nonce 999 --request-id 9a45c1f30a9896c5263508c2a132ebf7fc7e3c37ab86c74b
-```
-This will write the results of the key generation/resharing process with the given request ID to a file of format `keyshares-<timestamp>.json`
+1. --request-id: ID generated from calling keygen or reshare
+2. --withdrawal-credentials: The withdrawal credential associated with the validator
+4. --fork-version: ETH fork version (for eg: prater)
+
+Example:
 
 ```
-writing keyshares to file: keyshares-1680588773.json
+rockx-dkg-cli generate-deposit-data --request-id 33a5b7fe2b415673c4d971e6c0b002ce7d583b6621dffb31 -withdrawal-credentials "0100000000000000000000001d2f14d2dffee594b4093d42e4bc1b0ea55e8aa7" --fork-version "prater"
+```
+This will right the results to a json file in the following way
+
+```
+writing deposit data json to file deposit-data_1701318343.json
 ```
 
-### Generate Deposit data
-To generate deposit data run the command `generate-deposit-data` from the cli. It will generate a json file with name format as `deposit-data_*.json`
+#### Get Keyshares
 
-##### Command Options
---request-id: request id of previously ran keygen process.
---withdrawal-credentials: The withdrawal credentials associated with the validator account.
---fork-version: The fork version value.
+To distribute validator on SSV platform, you will need to select split key offine and then upload a keyshares file. To generate that keyshares file you can run the `get-keyshares` command. It takes the following parameters:
 
-#### Example:
+1. --request-id: ID generated from calling keygen or reshare
+2. --operator: Key value pair of operatorID (int) and operator's DKG node endpoint
+3. --owner-address: The cluster owner address (in the SSV contract)
+4. --owner-nonce: The validator registration nonce of the account (owner address) within the SSV contract (increments after each validator registration), obtained using the ssv-scanner tool. (default: 0)
+
+Example:
 ```
-rockx-dkg-cli generate-deposit-data --withdrawal-credentials "0100000000000000000000001d2f14d2dffee594b4093d42e4bc1b0ea55e8aa7" --fork-version "prater" --request-id 9a45c1f30a9896c5263508c2a132ebf7fc7e3c37ab86c74b
+rockx-dkg-cli get-keyshares \
+    --request-id 33a5b7fe2b415673c4d971e6c0b002ce7d583b6621dffb31 \
+    --operator 347="http://34.142.183.114:8081" \
+    --operator 348="http://34.142.183.114:8080" \
+    --operator 350="http://35.198.251.30:8080" \
+    --operator 351="http://35.187.235.146:8080" --owner-address "0x1d2f14d2dffee594b4093d42e4bc1b0ea55e8aa7" \
+    --owner-nonce 0
 ```
 
-The generated file can be verified at https://goerli.launchpad.ethereum.org/en/overview
+It will generate a keyshares file in the following format that can be used to registor validator on SSV platform.
 
-### Verifying Results
-To verify results, use Verify tool with Validator Public Key and Deposit Data signature
 ```
-# Build verify tool
-make build_verify
-
-# Run verify tool
-# ./build/bin/verify <fork_version> <validator_public_key> <deposit_data_sig> <withdrawal credentials>
-
-./build/bin/verify prater 91d5dfe9e2357e291bf8286d16ab501dab48e75f2a82b5f81c4acc88f8e84f228719d4a132e414f3746d071537e04d84 887caab77686fce13407f9e02de9db029344d31ffbcc4bd68d0d4248c969c6e19b0ea297e42ee82b02db8f95e14dd743179400eef4b58af7b1bb97cc78d1a7984000a233657cfe65e665a9d4762243229c83a8164767e7fd224cfa4e2bbdd821 0100000000000000000000001d2f14d2dffee594b4093d42e4bc1b0ea55e8aa7
-
-# Output
-# signature verification succeeded
+writing keyshares to file: keyshares-1701319254.json
 ```
+
+## DKG Node
+
+### Run using docker container
+
+To run DKG node from a docker image, first you need to prepare application environment variable file and operator keys.
+
+#### Environment Variables
+
+| Variable | Description | requried/default value |
+| -------- | ----------- | ---------------------- |
+| NODE_OPERATOR_ID | SSV operator ID for this node | required |
+| NODE_ADDR | Http address of the service | 0.0.0.0:8080 |
+| NODE_BROADCAST_ADDR | The public ip or address of this DKG node | required |
+| MESSENGER_SRV_ADDR | address of the messenger service | https://dkg-messenger.rockx.com |
+| USE_HARDCODED_OPERATORS | use `true` for running local example | false |
+| OPERATOR_PRIVATE_KEY | The raw base64 encoded RSA private key | Use either raw RSA private or JSON encode private key |
+| OPERATOR_PRIVATE_KEY_PASSWORD_PATH | password file path for json encoded RSA private key | required |
+| OPERATOR_PRIVATE_KEY_PATH | file path for json encoded RSA private key | required |
+
+> Note: if your operator is configured using raw private key then use OPERATOR_PRIVATE_KEY. If it is configured using JSON encoded key then use OPERATOR_PRIVATE_KEY_PASSWORD_PATH and OPERATOR_PRIVATE_KEY_PATH
+
+#### Running the container
+
+By now you must have prepared env file and operator keys if you are using JSON encoded.
+
+This might look something like this if you're using JSON encoded private key:
+
+```
+$ ls -Rw 1
+.:
+351.env
+keys
+
+./keys:
+encryption_private_key.json
+password
+```
+
+In case of raw private key you will just have the environment file
+
+The environment file should look like these:
+
+with raw private key:
+```
+NODE_OPERATOR_ID=351
+NODE_ADDR=0.0.0.0:8080
+NODE_BROADCAST_ADDR=http://35.187.235.146:8080
+MESSENGER_SRV_ADDR=https://dkg-messenger.rockx.com
+OPERATOR_PRIVATE_KEY=LS0tLS1CRUd...FURSBLRVktLS0tLQo=
+```
+
+with JSON encoded private key:
+```
+NODE_OPERATOR_ID=351
+NODE_ADDR=0.0.0.0:8080
+NODE_BROADCAST_ADDR=http://35.187.235.146:8080
+MESSENGER_SRV_ADDR=https://dkg-messenger.rockx.com
+OPERATOR_PRIVATE_KEY_PATH=/keys/encryption_private_key.json
+OPERATOR_PRIVATE_KEY_PASSWORD_PATH=/keys/password
+```
+
+**Pull the latest docker image**
+
+You can now pull the latest docker image for DKG node
+
+```
+docker pull asia-southeast1-docker.pkg.dev/rockx-mpc-lab/rockx-dkg/rockx-dkg-node:latest
+```
+
+**Run the container**
+
+```
+docker run -d --restart unless-stopped --name operator-351 -v /home/ubuntu/dkg/operator-351/keys:/keys --env-file /home/ubuntu/dkg/operator-351/351.env -p 8080:8080 asia-southeast1-docker.pkg.dev/rockx-mpc-lab/rockx-dkg/rockx-dkg-node:latest
+```
+
+You can check if your DKG node is correctly registered with the messenger service by running the following command and looking for your operatorID and your DKG node's public endpoint
+
+```
+curl -X GET https://dkg-messenger.rockx.com/topics/default
+```
+
+## DKG Messenger
+
+
+At present, RockX provides a hosted messenger service at https://dkg-messenger.rockx.com. If you prefer to operate your own messenger service, you can do so by utilizing the Docker image and configuring it to map to your SSL-enabled public address or IP
+
+#### Run using docker container
+
+**Pull your docker image from GCP container registry**
+```
+docker pull asia-southeast1-docker.pkg.dev/rockx-mpc-lab/rockx-dkg/rockx-dkg-messenger:latest
+```
+
+**Run the container**
+```
+sudo docker run -d --name messenger -p 3000:3000 asia-southeast1-docker.pkg.dev/rockx-mpc-lab/rockx-dkg/rockx-dkg-messenger:latest
+```
+
+This will run the messenger service on port 3000
+
+## Examples
+
+The /env directory contains sample env files for 7 operator nodes with IDs from 1 to 7. You can run the following command to spin up 7 DKG nodes and a messenger node using following command
+
+```
+docker-compose up --build -d
+```
+
+You can then build the cli tool using `make build` command and test keygen and other commands locally. Make sure you set the following env vars to run locally
+
+```
+export MESSENGER_SRV_ADDR=http://0.0.0.0:3000
+export USE_HARDCODED_OPERATORS=true
+```
+
 
