@@ -32,16 +32,20 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+var (
+	DepositCliVersion = "2.7.0"
+)
+
 type DepositDataJson struct {
-	PubKey                string      `json:"pubkey"`
-	WithdrawalCredentials string      `json:"withdrawal_credentials"`
-	Amount                phase0.Gwei `json:"amount"`
-	Signature             string      `json:"signature"`
-	DepositMessageRoot    string      `json:"deposit_message_root"`
-	DepositDataRoot       string      `json:"deposit_data_root"`
-	ForkVersion           string      `json:"fork_version"`
-	NetworkName           string      `json:"network_name"`
-	DepositCliVersion     string      `json:"deposit_cli_version"`
+	PubKey                string `json:"pubkey"`
+	WithdrawalCredentials string `json:"withdrawal_credentials"`
+	Amount                uint64 `json:"amount"`
+	Signature             string `json:"signature"`
+	DepositMessageRoot    string `json:"deposit_message_root"`
+	DepositDataRoot       string `json:"deposit_data_root"`
+	ForkVersion           string `json:"fork_version"`
+	NetworkName           string `json:"network_name"`
+	DepositCliVersion     string `json:"deposit_cli_version"`
 }
 
 func (h *CliHandler) HandleGetDepositData(c *cli.Context) error {
@@ -74,28 +78,39 @@ func (h *CliHandler) HandleGetDepositData(c *cli.Context) error {
 		WithdrawalCredentials: withdrawalCredentials,
 		Amount:                amount,
 	}
-	depositMsgRoot, _ := depositMsg.HashTreeRoot()
 
-	blsSigBytes, _ := hex.DecodeString(results.Output[firstOperator].Data.DepositDataSignature)
+	depositMsgRoot, err := depositMsg.HashTreeRoot()
+	if err != nil {
+		return fmt.Errorf("HandleGetDepositData: failed to generate deposit message root: %w", err)
+	}
+
+	blsSigBytes, err := hex.DecodeString(results.Output[firstOperator].Data.DepositDataSignature)
+	if err != nil {
+		return fmt.Errorf("HandleGetDepositData: failed to decode bls signature: %w", err)
+	}
+
 	blsSig := phase0.BLSSignature{}
 	copy(blsSig[:], blsSigBytes)
 	depositData.Signature = blsSig
 
-	depositDataRoot, _ := depositData.HashTreeRoot()
+	depositDataRoot, err := depositData.HashTreeRoot()
+	if err != nil {
+		return fmt.Errorf("HandleGetDepositData: failed to generate deposit data root: %w", err)
+	}
 
 	depositDataJson := DepositDataJson{
 		PubKey:                results.Output[firstOperator].Data.ValidatorPubKey,
 		WithdrawalCredentials: c.String("withdrawal-credentials"),
-		Amount:                amount,
+		Amount:                types.MaxEffectiveBalanceInGwei,
 		Signature:             results.Output[firstOperator].Data.DepositDataSignature,
 		DepositMessageRoot:    hex.EncodeToString(depositMsgRoot[:]),
 		DepositDataRoot:       hex.EncodeToString(depositDataRoot[:]),
 		ForkVersion:           hex.EncodeToString(fork[:]),
 		NetworkName:           c.String("fork-version"),
-		DepositCliVersion:     "2.3.0",
+		DepositCliVersion:     DepositCliVersion,
 	}
 
-	filepath := fmt.Sprintf("deposit-data_%d.json", time.Now().UTC().Unix())
+	filepath := fmt.Sprintf("deposit_data-%d.json", time.Now().UTC().Unix())
 	fmt.Printf("writing deposit data json to file %s\n", filepath)
 	return utils.WriteJSON(filepath, []DepositDataJson{depositDataJson})
 }

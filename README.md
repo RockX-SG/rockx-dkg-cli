@@ -177,7 +177,7 @@ rockx-dkg-cli generate-deposit-data --request-id 33a5b7fe2b415673c4d971e6c0b002c
 This will right the results to a json file in the following way
 
 ```
-writing deposit data json to file deposit-data_1701318343.json
+writing deposit data json to file deposit_data-1701318343.json
 ```
 
 #### Get Keyshares

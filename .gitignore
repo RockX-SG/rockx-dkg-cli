@@ -2,6 +2,7 @@ cmd/generate_keystore
 dkg_results_*
 keyshares-*
 deposit-data_*
+deposit_data-*
 build/bin/*
 release/*
 *.log
