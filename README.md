@@ -44,19 +44,19 @@ The relationship between these services can be summarized in the following diagr
 #### Downloads
 |Version|Link| os|arch|
 |-------|----|---|----|
-|0.2.9| https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.9/rockx-dkg-cli.0.2.9.darwin.arm64.tar.gz | darwin| arm64|
-|0.2.9| https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.9/rockx-dkg-cli.0.2.9.linux.amd64.tar.gz | linux| amd64|
+|0.2.10| https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.10/rockx-dkg-cli.0.2.10.darwin.arm64.tar.gz | darwin| arm64|
+|0.2.10| https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.10/rockx-dkg-cli.0.2.10.linux.amd64.tar.gz | linux| amd64|
 
 #### Installation
 1. Download the latest version of the cli tool from above links as per your system. The command for linux with amd64 architecture will be as follows:
 
 ```
-wget https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.9/rockx-dkg-cli.0.2.9.linux.amd64.tar.gz
+wget https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.10/rockx-dkg-cli.0.2.10.linux.amd64.tar.gz
 ```
 2. Extract the CLI tool
 
 ```
-tar -xzvf rockx-dkg-cli.0.2.9.linux.amd64.tar.gz
+tar -xzvf rockx-dkg-cli.0.2.10.linux.amd64.tar.gz
 ```
 3. Move the downloaded binary to your PATH
 
