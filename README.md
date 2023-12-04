@@ -136,7 +136,7 @@ rockx-dkg-cli keygen \
     --operator 350="http://35.198.251.30:8080" \
     --operator 351="http://35.187.235.146:8080" \
     --threshold 3 \
-    --withdrawal-credentials "0100000000000000000000001d2f14d2dffee594b4093d42e4bc1b0ea55e8aa7" \
+    --withdrawal-credentials "0100000000000000000000001d2f14d2DDfee594b4093d42E4bC1b0eA55E8aa7" \
     --fork-version "prater"
 ```
 
@@ -172,7 +172,7 @@ Once the keygen is finished, you can also generate a Deposit Data file for depos
 Example:
 
 ```
-rockx-dkg-cli generate-deposit-data --request-id 33a5b7fe2b415673c4d971e6c0b002ce7d583b6621dffb31 -withdrawal-credentials "0100000000000000000000001d2f14d2dffee594b4093d42e4bc1b0ea55e8aa7" --fork-version "prater"
+rockx-dkg-cli generate-deposit-data --request-id 33a5b7fe2b415673c4d971e6c0b002ce7d583b6621dffb31 --withdrawal-credentials "0100000000000000000000001d2f14d2DDfee594b4093d42E4bC1b0eA55E8aa7" --fork-version "prater"
 ```
 This will right the results to a json file in the following way
 
@@ -196,7 +196,7 @@ rockx-dkg-cli get-keyshares \
     --operator 347="http://34.142.183.114:8081" \
     --operator 348="http://34.142.183.114:8080" \
     --operator 350="http://35.198.251.30:8080" \
-    --operator 351="http://35.187.235.146:8080" --owner-address "0x1d2f14d2dffee594b4093d42e4bc1b0ea55e8aa7" \
+    --operator 351="http://35.187.235.146:8080" --owner-address "0x1d2f14d2DDfee594b4093d42E4bC1b0eA55E8aa7" \
     --owner-nonce 0
 ```
 
