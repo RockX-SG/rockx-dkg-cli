@@ -24,6 +24,7 @@ package cli
 import (
 	"encoding/hex"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/RockX-SG/frost-dkg-demo/internal/utils"
@@ -35,6 +36,10 @@ import (
 )
 
 func (h *CliHandler) HandleGetKeyShares(c *cli.Context) error {
+	// the following two lines are temporary workaround
+	network := c.String("network")
+	os.Setenv("OPERATOR_REGISTRY_NETWORK", network)
+
 	keygenRequestID := c.String("request-id")
 
 	keygenOutput, err := h.DKGResultByRequestID(keygenRequestID)

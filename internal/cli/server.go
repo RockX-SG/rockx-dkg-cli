@@ -177,6 +177,12 @@ func (h CliHandler) CommandGetKeyshares() *cli.Command {
 				Usage:    "The validator registration nonce of the account (owner address) within the SSV contract (increments after each validator registration), obtained using the ssv-scanner tool.",
 				Required: true,
 			},
+			&cli.StringFlag{
+				Name:     "network",
+				Aliases:  []string{"net"},
+				Usage:    "ETH network: prater, holesky, mainnet",
+				Required: true,
+			},
 		},
 	}
 }

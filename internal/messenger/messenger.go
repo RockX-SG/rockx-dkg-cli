@@ -197,6 +197,6 @@ func MessengerAddrFromEnv() string {
 	if os.Getenv("MESSENGER_SRV_ADDR") != "" {
 		return os.Getenv("MESSENGER_SRV_ADDR")
 	} else {
-		return "http://dkg-messenger.rockx.com"
+		return "https://dkg-messenger.rockx.com"
 	}
 }
