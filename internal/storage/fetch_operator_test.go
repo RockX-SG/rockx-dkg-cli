@@ -32,10 +32,54 @@ import (
 func TestFetchOperatorByID(t *testing.T) {
 	os.Setenv("USE_HARDCODED_OPERATORS", "false")
 
-	var testOperatorID types.OperatorID = 1 //LidoRockX
+	networks := []string{"mainnet", "jato-v2", "prater", "goerli", "holesky"}
+	testOperatorIDs := []types.OperatorID{18, 31, 31, 31, 119}
 
-	operator, err := FetchOperatorByID(testOperatorID)
+	for i, network := range networks {
+		t.Run(network, func(t *testing.T) {
+			os.Setenv("OPERATOR_REGISTRY_NETWORK", network)
+			operator, err := FetchOperatorByID(testOperatorIDs[i])
+			require.Nil(t, err)
+			require.NotNil(t, operator)
+			require.Equal(t, testOperatorIDs[i], operator.OperatorID)
+		})
+	}
+}
 
-	require.Nil(t, err)
-	require.NotNil(t, operator)
+func TestOperatorRegistryNetwork(t *testing.T) {
+	networks := []struct {
+		Network  string
+		Expected string
+	}{
+		{
+			Network:  "mainnet",
+			Expected: "mainnet",
+		},
+		{
+			Network:  "jato-v2",
+			Expected: "prater",
+		},
+		{
+			Network:  "prater",
+			Expected: "prater",
+		},
+		{
+			Network:  "goerli",
+			Expected: "prater",
+		},
+		{
+			Network:  "holesky",
+			Expected: "holesky",
+		},
+	}
+
+	for _, network := range networks {
+		t.Run(network.Network, func(t *testing.T) {
+			os.Setenv("OPERATOR_REGISTRY_NETWORK", network.Network)
+			got := OperatorRegistryNetwork()
+
+			require.Equal(t, network.Expected, got)
+		})
+	}
+
 }

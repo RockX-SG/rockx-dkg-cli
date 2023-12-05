@@ -70,7 +70,7 @@ type operatorResponse struct {
 
 func GetOperatorFromRegistryByID(operatorID types.OperatorID) (*operatorResponse, error) {
 	var operator = new(operatorResponse)
-	respBody, err := getResponse(fmt.Sprintf("https://api.ssv.network/api/v4/prater/operators/%d", operatorID))
+	respBody, err := getResponse(fmt.Sprintf("https://api.ssv.network/api/v4/%s/operators/%d", OperatorRegistryNetwork(), operatorID))
 	if err != nil {
 		return nil, err
 	}
@@ -80,12 +80,27 @@ func GetOperatorFromRegistryByID(operatorID types.OperatorID) (*operatorResponse
 	return operator, nil
 }
 
-func isUsingHardcodedOperators() bool {
-	isHardcoded := os.Getenv("USE_HARDCODED_OPERATORS")
-	if isHardcoded == "" {
-		isHardcoded = "false"
+func OperatorRegistryNetwork() string {
+	switch os.Getenv("OPERATOR_REGISTRY_NETWORK") {
+	case "prater", "goerli", "jato-v2":
+		return "prater"
+	case "holesky":
+		return "holesky"
+	default:
+		return "mainnet"
 	}
-	return os.Getenv("USE_HARDCODED_OPERATORS") == "true"
+}
+
+func isUsingHardcodedOperators() bool {
+	if os.Getenv("USE_HARDCODED_OPERATORS") == "true" ||
+		os.Getenv("USE_HARDCODED_OPERATORS") == "True" ||
+		os.Getenv("USE_HARDCODED_OPERATORS") == "T" ||
+		os.Getenv("USE_HARDCODED_OPERATORS") == "t" ||
+		os.Getenv("USE_HARDCODED_OPERATORS") == "1" {
+
+		return true
+	}
+	return false
 }
 
 func getResponse(url string) ([]byte, error) {

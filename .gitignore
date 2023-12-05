@@ -6,3 +6,4 @@ deposit_data-*
 build/bin/*
 release/*
 *.log
+.testCoverage.txt

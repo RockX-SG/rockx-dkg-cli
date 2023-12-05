@@ -5,7 +5,6 @@ services:
       context: ./
       dockerfile: build/docker/messenger/Dockerfile
     command: ./messenger -http-addr 0.0.0.0:3000
-    env_file: env/messenger.env
     restart: on-failure
     ports: 
       - 3000:3000

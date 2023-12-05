@@ -19,7 +19,11 @@
       - [Running the container](#running-the-container)
   - [DKG Messenger](#dkg-messenger)
       - [Run using docker container](#run-using-docker-container-1)
-  - [Examples](#examples)
+  - [Running example cluster locally](#running-example-cluster-locally)
+      - [Keygen](#keygen-1)
+      - [DKG Results](#dkg-results)
+      - [Generate Deposit Data](#generate-deposit-data-1)
+      - [Get Keyshares](#get-keyshares-1)
 
 ## Overview
 
@@ -224,6 +228,7 @@ To run DKG node from a docker image, first you need to prepare application envir
 | OPERATOR_PRIVATE_KEY | The raw base64 encoded RSA private key | Use either raw RSA private or JSON encode private key |
 | OPERATOR_PRIVATE_KEY_PASSWORD_PATH | password file path for json encoded RSA private key | required |
 | OPERATOR_PRIVATE_KEY_PATH | file path for json encoded RSA private key | required |
+| OPERATOR_REGISTRY_NETWORK | operator registry network to fetch operator details | default is mainnet, value can be set to prater, holesky and mainnet|
 
 > Note: if your operator is configured using raw private key then use OPERATOR_PRIVATE_KEY. If it is configured using JSON encoded key then use OPERATOR_PRIVATE_KEY_PASSWORD_PATH and OPERATOR_PRIVATE_KEY_PATH
 
@@ -255,6 +260,7 @@ NODE_ADDR=0.0.0.0:8080
 NODE_BROADCAST_ADDR=http://35.187.235.146:8080
 MESSENGER_SRV_ADDR=https://dkg-messenger.rockx.com
 OPERATOR_PRIVATE_KEY=LS0tLS1CRUd...FURSBLRVktLS0tLQo=
+OPERATOR_REGISTRY_NETWORK=prater
 ```
 
 with JSON encoded private key:
@@ -265,6 +271,7 @@ NODE_BROADCAST_ADDR=http://35.187.235.146:8080
 MESSENGER_SRV_ADDR=https://dkg-messenger.rockx.com
 OPERATOR_PRIVATE_KEY_PATH=/keys/encryption_private_key.json
 OPERATOR_PRIVATE_KEY_PASSWORD_PATH=/keys/password
+OPERATOR_REGISTRY_NETWORK=prater
 ```
 
 **Pull the latest docker image**
@@ -306,7 +313,7 @@ sudo docker run -d --name messenger -p 3000:3000 asia-southeast1-docker.pkg.dev/
 
 This will run the messenger service on port 3000
 
-## Examples
+## Running example cluster locally
 
 The /env directory contains sample env files for 7 operator nodes with IDs from 1 to 7. You can run the following command to spin up 7 DKG nodes and a messenger node using following command
 
@@ -321,4 +328,36 @@ export MESSENGER_SRV_ADDR=http://0.0.0.0:3000
 export USE_HARDCODED_OPERATORS=true
 ```
 
-
+#### Keygen
+```
+./build/bin/rockx-dkg-cli keygen \
+    --operator 1="http://0.0.0.0:8081" \
+    --operator 2="http://0.0.0.0:8082" \
+    --operator 3="http://0.0.0.0:8083" \
+    --operator 4="http://0.0.0.0:8084" \
+    --threshold 3 \
+    --withdrawal-credentials "0100000000000000000000001d2f14d2DDfee594b4093d42E4bC1b0eA55E8aa7" \
+    --fork-version "prater"
+```
+#### DKG Results
+```
+./build/bin/rockx-dkg-cli get-dkg-results --request-id 919cc856f53143875b0679cf9c5cbe183a2f47bbe61bfbe9
+```
+#### Generate Deposit Data
+```
+./build/bin/rockx-dkg-cli generate-deposit-data \
+    --request-id 919cc856f53143875b0679cf9c5cbe183a2f47bbe61bfbe9 \
+    --withdrawal-credentials "0100000000000000000000001d2f14d2DDfee594b4093d42E4bC1b0eA55E8aa7" \
+    --fork-version "prater"
+```
+#### Get Keyshares
+```
+./build/bin/rockx-dkg-cli get-keyshares \
+    --request-id 919cc856f53143875b0679cf9c5cbe183a2f47bbe61bfbe9 \
+    --operator 1="http://0.0.0.0:8081" \
+    --operator 2="http://0.0.0.0:8082" \
+    --operator 3="http://0.0.0.0:8083" \
+    --operator 4="http://0.0.0.0:8084" \
+    --owner-address "0x1d2f14d2DDfee594b4093d42E4bC1b0eA55E8aa7" \
+    --owner-nonce 0
+```
