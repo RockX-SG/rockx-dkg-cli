@@ -1,4 +1,4 @@
-VERSION = 0.2.11
+VERSION = 0.2.12
 GOBASE = $(shell pwd)
 GOBIN = $(GOBASE)/build/bin
 GOCMD = $(GOBASE)/cmd

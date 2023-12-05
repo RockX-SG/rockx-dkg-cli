@@ -48,19 +48,19 @@ The relationship between these services can be summarized in the following diagr
 #### Downloads
 |Version|Link| os|arch|
 |-------|----|---|----|
-|0.2.11| https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.11/rockx-dkg-cli.0.2.11.darwin.arm64.tar.gz | darwin| arm64|
-|0.2.11| https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.11/rockx-dkg-cli.0.2.11.linux.amd64.tar.gz | linux| amd64|
+|0.2.12| https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.12/rockx-dkg-cli.0.2.12.darwin.arm64.tar.gz | darwin| arm64|
+|0.2.12| https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.12/rockx-dkg-cli.0.2.12.linux.amd64.tar.gz | linux| amd64|
 
 #### Installation
 1. Download the latest version of the cli tool from above links as per your system. The command for linux with amd64 architecture will be as follows:
 
 ```
-wget https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.11/rockx-dkg-cli.0.2.11.linux.amd64.tar.gz
+wget https://github.com/RockX-SG/rockx-dkg-cli/releases/download/v0.2.12/rockx-dkg-cli.0.2.12.linux.amd64.tar.gz
 ```
 2. Extract the CLI tool
 
 ```
-tar -xzvf rockx-dkg-cli.0.2.11.linux.amd64.tar.gz
+tar -xzvf rockx-dkg-cli.0.2.12.linux.amd64.tar.gz
 ```
 3. Move the downloaded binary to your PATH
 
@@ -192,10 +192,11 @@ To distribute validator on SSV platform, you will need to select split key offin
 2. --operator: Key value pair of operatorID (int) and operator's DKG node endpoint
 3. --owner-address: The cluster owner address (in the SSV contract)
 4. --owner-nonce: The validator registration nonce of the account (owner address) within the SSV contract (increments after each validator registration), obtained using the ssv-scanner tool. (default: 0)
+5. --network: ETH network (values: prater, holesky or mainnet)
 
 Example:
 ```
-rockx-dkg-cli get-keyshares \
+rockx-dkg-cli get-keyshares --network prater \
     --request-id 33a5b7fe2b415673c4d971e6c0b002ce7d583b6621dffb31 \
     --operator 347="http://34.142.183.114:8081" \
     --operator 348="http://34.142.183.114:8080" \
@@ -352,7 +353,7 @@ export USE_HARDCODED_OPERATORS=true
 ```
 #### Get Keyshares
 ```
-./build/bin/rockx-dkg-cli get-keyshares \
+./build/bin/rockx-dkg-cli get-keyshares --network prater \
     --request-id 919cc856f53143875b0679cf9c5cbe183a2f47bbe61bfbe9 \
     --operator 1="http://0.0.0.0:8081" \
     --operator 2="http://0.0.0.0:8082" \
