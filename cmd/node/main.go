@@ -99,6 +99,8 @@ func main() {
 
 	// register api routes
 	r := gin.Default()
+	r.SetTrustedProxies(nil)
+
 	r.Use(logger.GinLogger(log))
 
 	r.GET("/ping", ping.HandlePing)

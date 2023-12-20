@@ -71,6 +71,8 @@ func main() {
 	})
 
 	r := gin.Default()
+	r.SetTrustedProxies(nil)
+
 	r.Use(logger.GinLogger(log))
 
 	InitializeAPIEndpoints(r, m, worker)
